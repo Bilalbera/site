@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Süper Tıklama Oyunu (Rebirth Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937;
+        }
+        /* Tıklama Butonuna Özel Stil */
+        #clickButton {
+            transition: all 0.1s ease;
+            box-shadow: 0 6px #0d47a1; /* Daha koyu gölge */
+        }
+        #clickButton:active {
+            box-shadow: 0 0 #0d47a1;
+            transform: translateY(6px);
+        }
+        /* Market kartları için kaydırma çubuğu stili */
+        #marketItems {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .view-container {
+            min-height: 550px; /* Görünümler arası geçişte boyutu korumak için */
+        }
+        .nav-btn.active {
+            background-color: #f59e0b; /* Aktif sekme rengi */
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center p-4">
+
+    <!-- Ana Oyun Konteyneri -->
+    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Rebirth Edition</h1>
+
+        <!-- Durum Bilgileri (Üst Panel) - DÜZELTME: Responsive Grid yapısına geçirildi -->
+        <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
+            <!-- 1. Para -->
+            <div class="col-span-2 sm:col-span-1">
+                <p class="text-base sm:text-lg">💰 Para:</p>
+                <span id="coinDisplay" class="font-bold text-yellow-400 text-3xl block">0</span>
+            </div>
+            <!-- 2. Rebirth -->
+            <div class="col-span-2 sm:col-span-1">
+                <p class="text-base sm:text-lg">🌟 Rebirth:</p>
+                <span id="rebirthDisplay" class="font-bold text-indigo-400 text-3xl block">0</span>
+            </div>
+            <!-- 3. TBK (Net) -->
+            <div class="col-span-1">
+                <p class="text-base text-green-300">✨ Tıklama (TBK):</p>
+                <span id="clickValueDisplay" class="font-semibold text-green-400 text-2xl block">1</span>
+            </div>
+            <!-- 4. SBK (Net) -->
+            <div class="col-span-1">
+                <p class="text-base text-red-300">⚙️ Pasif (SBK):</p>
+                <span id="passiveRateDisplay" class="font-semibold text-red-400 text-2xl block">0</span>
+            </div>
+        </div>
+
+        <!-- Gezinme (Navigation) -->
+        <nav class="flex justify-center gap-4 mb-6">
+            <button id="navClicker" class="nav-btn active px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold transition duration-150" onclick="switchView('clickerView')">Tıklama Merkezi</button>
+            <button id="navMarket" class="nav-btn px-6 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150" onclick="switchView('marketView')">Pazar</button>
+        </nav>
+
+        <!-- Görünüm Konteynerleri -->
+        
+        <!-- 1. Tıklama Merkezi Görünümü -->
+        <div id="clickerView" class="view-container">
+            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-blue-500">
+                <h2 class="text-3xl font-bold mb-6 text-blue-300 text-center">Tıkla ve Kazan!</h2>
+                
+                <!-- Tıklama Butonu -->
+                <button id="clickButton" 
+                        class="w-full h-40 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-5xl rounded-lg border-b-6 border-blue-800 active:border-b-4 transition-all duration-75">
+                    TIKLA!
+                </button>
+
+                <!-- Rebirth Alanı -->
+                <div class="mt-8 p-4 bg-purple-900 rounded-lg border-2 border-purple-500 text-center">
+                    <h3 class="text-2xl font-bold text-purple-300 mb-2">Yeniden Doğuş (Rebirth)</h3>
+                    <p class="text-sm text-gray-300 mb-3">Tüm ilerlemenizi sıfırlayın, ancak kalıcı bir çarpan kazanın. (Gereksinim: 100 SBK)</p>
+                    <button id="rebirthButton" onclick="performRebirth()"
+                            class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-full shadow-lg transition duration-150">
+                        YENİDEN DOĞ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Market Görünümü -->
+        <div id="marketView" class="view-container hidden">
+            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-yellow-500">
+                <h2 class="text-3xl font-bold mb-6 text-yellow-300 text-center">Pazar (Yükseltmeler)</h2>
+                <p class="text-sm text-gray-300 mb-4 text-center">Paralarınızı harcayarak Tıklama veya Pasif gelirinizi kalıcı olarak artırın.</p>
+                
+                <!-- Market Öğeleri Buraya JS ile Eklenecek -->
+                <div id="marketItems" class="space-y-4">
+                    <!-- Market Kartları -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Mesaj Kutusu -->
+        <div id="messageBox" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 bg-red-600 text-white font-bold rounded-lg shadow-xl hidden transition duration-300 ease-in-out">
+            Yeterli paranız yok!
+        </div>
+
+    </div>
+
+    <!-- JavaScript Oyun Mantığı -->
+    <script>
+        // Oyun Durumu (State)
+        let coins = 0;             // Toplam para
+        let baseClickValue = 1;    // Tıklama başına temel kazanç (çarpan hariç)
+        let basePassiveRate = 0;   // Saniye başına temel pasif kazanç (çarpan hariç)
+        let rebirths = 0;          // Yeniden doğuş sayısı
+        let rebirthMultiplier = 1; // Yeniden doğuş ile gelen kalıcı çarpan
+        let passiveMultiplier = 1; // Marketten alınan pasif gelir çarpanı
+
+        // HTML Elementleri
+        const coinDisplay = document.getElementById('coinDisplay');
+        const rebirthDisplay = document.getElementById('rebirthDisplay');
+        const clickValueDisplay = document.getElementById('clickValueDisplay');
+        const passiveRateDisplay = document.getElementById('passiveRateDisplay');
+        const clickButton = document.getElementById('clickButton');
+        const marketItemsContainer = document.getElementById('marketItems');
+        const messageBox = document.getElementById('messageBox');
+        
+        // Pazar Öğeleri Verisi
+        const MARKET_ITEMS = [
+            // type: 'click' - Tıklama değerini artırır
+            { id: 1, name: "Gelişmiş Parmak", cost: 10, initialCost: 10, multiplier: 1.5, type: 'click', value: 1, level: 0, maxLevel: 50, description: "Tıklama başına kazancı 1 artırır." },
+            
+            // type: 'passive' - Pasif oranı artırır
+            { id: 2, name: "Otomatik Tıklayıcı", cost: 100, initialCost: 100, multiplier: 1.15, type: 'passive', value: 1, level: 0, maxLevel: 100, description: "Saniye başına 1 pasif gelir sağlar." },
+            { id: 3, name: "Küçük Madenci", cost: 500, initialCost: 500, multiplier: 1.2, type: 'passive', value: 5, level: 0, maxLevel: 25, description: "Saniye başına 5 pasif gelir sağlar." },
+            { id: 4, name: "İş Merkezi", cost: 5000, initialCost: 5000, multiplier: 1.3, type: 'passive', value: 50, level: 0, maxLevel: 10, description: "Saniye başına 50 pasif gelir sağlar." },
+            
+            // type: 'multiplier' - Yeni! Pasif çarpanı artırır (SBK'yı katlar)
+            { id: 5, name: "Pasif Çarpan Kartı", cost: 20000, initialCost: 20000, multiplier: 3.0, type: 'multiplier', value: 2, level: 0, maxLevel: 5, description: "Pasif gelirinizi (SBK) 2 katına çıkarır." }
+        ];
+
+        // ------------------------------------------------------------------
+        // YARDIMCI FONKSİYONLAR
+        // ------------------------------------------------------------------
+
+        /**
+         * Bir sayıyı okunabilir formatta gösterir (Örn: 123456 -> 123.456).
+         */
+        function formatNumber(num) {
+            // Yüksek sayılar için bilimsel notasyon (Örn: 1.23M)
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(2) + " M";
+            }
+            return Math.floor(num).toLocaleString('tr-TR');
+        }
+
+        /**
+         * alert() yerine kullanılan basit mesaj kutusu.
+         * @param {string} message - Gösterilecek mesaj.
+         * @param {string} type - 'error' (varsayılan) veya 'success'.
+         */
+        function showMessage(message, type = 'error') {
+            messageBox.textContent = message;
+            // Class temizleme, sadece bg-XXX-XXX yapısını hedef alıyoruz
+            messageBox.className = messageBox.className.replace(/\sbg-(red|green|purple)-\d+/g, '');
+            
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-600');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-600');
+            }
+
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000); // 3 saniye sonra gizle
+        }
+
+        // ------------------------------------------------------------------
+        // GÖRÜNÜM VE NAVİGASYON
+        // ------------------------------------------------------------------
+
+        /**
+         * Görünümler (Tıklama Merkezi / Market) arasında geçiş yapar.
+         * @param {string} viewId - Gösterilecek görünümün ID'si ('clickerView' veya 'marketView').
+         */
+        function switchView(viewId) {
+            document.querySelectorAll('.view-container').forEach(view => {
+                view.classList.add('hidden');
+            });
+            
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // ID'yi HTML'deki büyük harfli ID'lerle eşleşecek şekilde oluştur
+            const navBase = viewId.replace('View', '');
+            const navId = 'nav' + navBase.charAt(0).toUpperCase() + navBase.slice(1);
+            
+            const navButton = document.getElementById(navId);
+
+            if (navButton) {
+                navButton.classList.add('active');
+            } else {
+                console.error(`Gezinme düğmesi bulunamadı: ${navId}`);
+            }
+            
+            // Market'e geçildiğinde kartları güncel olarak yeniden çiz
+            if (viewId === 'marketView') {
+                renderMarket();
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // OYUN MANTIK VE DÖNGÜSÜ
+        // ------------------------------------------------------------------
+        
+        /**
+         * Oyuncunun parasına tıklama kazancını ekler.
+         */
+        function handleManualClick() {
+            // Gerçek kazanç = (Temel Tıklama Değeri) * (Rebirth Çarpanı)
+            const actualClick = baseClickValue * rebirthMultiplier;
+            coins += actualClick;
+            updateDisplay();
+            saveGame();
+        }
+
+        /**
+         * Saniye başına kazanç ekler (Pasif Gelir).
+         */
+        function handlePassiveIncome() {
+            if (basePassiveRate > 0) {
+                // Gerçek pasif kazanç = (Temel Pasif Oranı) * (Rebirth Çarpanı) * (Market Çarpanı)
+                const actualPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier;
+                coins += actualPassive;
+                updateDisplay();
+                saveGame();
+            }
+        }
+
+        /**
+         * Oyun durumunu (Para, TBK, SBK) ekranda günceller.
+         */
+        function updateDisplay() {
+            // Hesaplanan Net Değerler
+            const netClick = baseClickValue * rebirthMultiplier;
+            const netPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier;
+
+            // Display null checkleri
+            if (coinDisplay) coinDisplay.textContent = formatNumber(coins);
+            if (rebirthDisplay) rebirthDisplay.textContent = formatNumber(rebirths);
+            
+            // Çarpanı da göstererek TBK'yı güncelle
+            if (clickValueDisplay) clickValueDisplay.textContent = `${formatNumber(netClick)} (x${rebirthMultiplier.toFixed(2)})`; 
+            
+            // Çarpanı da göstererek SBK'yı güncelle
+            if (passiveRateDisplay) passiveRateDisplay.textContent = `${formatNumber(netPassive)} (x${(rebirthMultiplier * passiveMultiplier).toFixed(2)})`; 
+
+            // Rebirth düğmesinin durumunu kontrol et
+            const rebirthBtn = document.getElementById('rebirthButton');
+            const requiredPassiveRate = 100;
+            if (rebirthBtn) { // Null check eklendi
+                 // HATA DÜZELTME: Artık Net SBK değeri (çarpanlı) kontrol ediliyor.
+                 if (netPassive >= requiredPassiveRate) {
+                     // Butonu aktif hale getir
+                     rebirthBtn.classList.replace('bg-indigo-600', 'bg-purple-600');
+                     rebirthBtn.classList.add('hover:bg-purple-700');
+                     rebirthBtn.disabled = false;
+                } else {
+                     // Butonu pasif hale getir
+                     rebirthBtn.classList.replace('bg-purple-600', 'bg-indigo-600');
+                     rebirthBtn.classList.remove('hover:bg-purple-700');
+                     rebirthBtn.disabled = true;
+                }
+            }
+        }
+
+        /**
+         * Yükseltme satın alma işlemini gerçekleştirir.
+         * @param {Object} item - Satın alınacak pazar öğesi.
+         */
+        function buyItem(item) {
+            if (item.level >= item.maxLevel) {
+                showMessage(`${item.name} zaten maksimum seviyede!`);
+                return;
+            }
+
+            if (coins >= item.cost) {
+                coins -= item.cost;
+                item.level += 1;
+                
+                // Maliyeti artır (bir sonraki seviye için)
+                item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
+                
+                // Etkileri güncelle
+                if (item.type === 'click') {
+                    baseClickValue += item.value;
+                } else if (item.type === 'passive') {
+                    basePassiveRate += item.value;
+                } else if (item.type === 'multiplier') {
+                    // Yeni çarpan itemı: Her seviyede passiveMultiplier'ı item.value (yani 2) ile çarpar
+                    passiveMultiplier *= item.value; 
+                }
+                
+                updateDisplay();
+                renderMarket(); // Satın alma sonrası marketi yeniden çizmek için eklendi.
+                saveGame();
+            } else {
+                showMessage("Yeterli paranız yok!");
+            }
+        }
+
+        /**
+         * Yeniden Doğuş (Rebirth) işlemini gerçekleştirir.
+         */
+        function performRebirth() {
+            const requiredPassiveRate = 100;
+            // HATA DÜZELTME: Net Pasif Geliri (kullanıcının gördüğü değeri) kontrol et.
+            const netPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier; 
+
+            // Kontrol: Net SBK 100'e ulaştı mı?
+            if (netPassive < requiredPassiveRate) {
+                showMessage(`Yeniden Doğmak için en az ${requiredPassiveRate} SBK oranına ulaşmalısınız! (Mevcut Net SBK: ${formatNumber(netPassive)})`, 'error');
+                return;
+            }
+            
+            // 1. Rebirth Artışı ve Çarpan Hesaplama
+            rebirths += 1;
+            rebirthMultiplier = 1 + (rebirths * 0.20); // Her Rebirth %20 artış
+
+            // 2. Sıfırlama
+            coins = 0;
+            baseClickValue = 1;
+            basePassiveRate = 0;
+            passiveMultiplier = 1; // Market çarpanını sıfırla
+
+            // Item seviyelerini ve maliyetlerini sıfırla
+            MARKET_ITEMS.forEach(item => {
+                item.level = 0;
+                item.cost = item.initialCost;
+            });
+
+            // 3. Güncelleme
+            showMessage(`Yeniden Doğuş Başarılı! Kalıcı Çarpanınız: x${rebirthMultiplier.toFixed(2)}`, 'success');
+            updateDisplay();
+            renderMarket(); // Pazarı yeniden çiz
+            saveGame();
+        }
+
+
+        /**
+         * Market öğelerini DOM'a (ekrana) çizer.
+         */
+        function renderMarket() {
+            if (!marketItemsContainer) return; // Null check
+            marketItemsContainer.innerHTML = '';
+            
+            MARKET_ITEMS.forEach(item => {
+                const isAffordable = coins >= item.cost;
+                const isMaxLevel = item.level >= item.maxLevel;
+                
+                // Kart rengi ve gösterim metni (TBK, SBK, Çarpan)
+                let colorClass = 'text-green-400';
+                let valueText = `+${formatNumber(item.value)} ${item.type === 'click' ? 'TBK' : item.type === 'passive' ? 'SBK' : `x${item.value} SBK`}`;
+
+                if (item.type === 'passive') colorClass = 'text-red-400';
+                if (item.type === 'multiplier') colorClass = 'text-blue-400';
+
+                const cardHtml = `
+                    <div id="item-${item.id}" class="p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between transition duration-200 ${isMaxLevel ? 'bg-gray-600 opacity-50' : isAffordable ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-700 opacity-70 cursor-not-allowed'}">
+                        <div class="mb-2 sm:mb-0">
+                            <h3 class="text-xl font-bold ${colorClass}">${item.name} <span class="text-base text-gray-400">(Seviye: ${item.level} / ${item.maxLevel})</span></h3>
+                            <p class="text-sm text-gray-300">${item.description} <span class="font-bold text-lg">${valueText}</span></p>
+                        </div>
+                        <button class="buy-btn w-full sm:w-auto px-4 py-2 mt-2 sm:mt-0 rounded-lg font-bold transition duration-200" 
+                                data-item-id="${item.id}"
+                                ${isMaxLevel || !isAffordable ? 'disabled' : ''}
+                                style="${isMaxLevel ? 'background-color: #4b5563; color: #9ca3af;' : isAffordable ? 'background-color: #f59e0b; color: #1f2937;' : 'background-color: #9ca3af; color: #4b5563; cursor: not-allowed;'}">
+                            ${isMaxLevel ? 'MAX SEVİYE' : `${formatNumber(item.cost)} 💰 AL`}
+                        </button>
+                    </div>
+                `;
+                marketItemsContainer.innerHTML += cardHtml;
+            });
+            
+            // Yeni butonlara olay dinleyicisi ekle
+            document.querySelectorAll('.buy-btn').forEach(button => {
+                // Etkin olmayan butonlara dinleyici eklemeyi atla
+                if (!button.disabled) {
+                    button.addEventListener('click', (e) => {
+                        const itemId = parseInt(e.currentTarget.getAttribute('data-item-id'));
+                        const item = MARKET_ITEMS.find(i => i.id === itemId);
+                        if (item) {
+                            buyItem(item);
+                        }
+                    });
+                }
+            });
+        }
+
+        // ------------------------------------------------------------------
+        // KALICI KAYIT (LOCAL STORAGE)
+        // ------------------------------------------------------------------
+        
+        /**
+         * Oyun durumunu Local Storage'a kaydeder.
+         */
+        function saveGame() {
+            const gameState = {
+                coins: coins,
+                baseClickValue: baseClickValue,
+                basePassiveRate: basePassiveRate,
+                rebirths: rebirths,
+                rebirthMultiplier: rebirthMultiplier,
+                passiveMultiplier: passiveMultiplier,
+                marketItems: MARKET_ITEMS.map(item => ({
+                    id: item.id,
+                    level: item.level,
+                    cost: item.cost,
+                }))
+            };
+            localStorage.setItem('clickerGameSave', JSON.stringify(gameState));
+        }
+
+        /**
+         * Oyun durumunu Local Storage'dan yükler.
+         */
+        function loadGame() {
+            const savedState = localStorage.getItem('clickerGameSave');
+            if (savedState) {
+                const gameState = JSON.parse(savedState);
+                
+                // Temel değişkenleri yükle
+                coins = gameState.coins || 0;
+                baseClickValue = gameState.baseClickValue || 1;
+                basePassiveRate = gameState.basePassiveRate || 0;
+                rebirths = gameState.rebirths || 0;
+                rebirthMultiplier = gameState.rebirthMultiplier || 1;
+                passiveMultiplier = gameState.passiveMultiplier || 1;
+                
+                // Item seviyelerini ve maliyetlerini yükle
+                if (gameState.marketItems) {
+                    gameState.marketItems.forEach(savedItem => {
+                        const item = MARKET_ITEMS.find(i => i.id === savedItem.id);
+                        if (item) {
+                            item.level = savedItem.level;
+                            item.cost = savedItem.cost;
+                            // Çarpan öğesi için pasif çarpanı yeniden hesapla
+                            if(item.type === 'multiplier' && item.level > 0) {
+                                // PassiveMultiplier'ı çarpan öğelerinin seviyelerine göre yeniden hesapla
+                                passiveMultiplier *= Math.pow(item.value, item.level); 
+                            }
+                        }
+                    });
+                }
+                
+                showMessage("Oyun Yüklendi!", 'success');
+                updateDisplay();
+                renderMarket();
+                return true;
+            }
+            return false;
+        }
+
+        // ------------------------------------------------------------------
+        // OYUN BAŞLATMA
+        // ------------------------------------------------------------------
+
+        /**
+         * Oyunu başlatır ve olay dinleyicilerini kurar.
+         */
+        function initializeGame() {
+            // Kayıt yükle
+            loadGame();
+
+            // Tıklama olayını ata
+            if (clickButton) clickButton.addEventListener('click', handleManualClick);
+            
+            // Pasif gelir döngüsünü başlat (Her saniye 1000ms'de bir)
+            setInterval(handlePassiveIncome, 1000);
+            
+            // Otomatik Kayıt döngüsünü başlat (Her 5 saniyede bir)
+            setInterval(saveGame, 5000);
+
+            // İlk gösterimi güncelle ve görünümü ayarla
+            updateDisplay();
+            renderMarket(); // Market öğelerini hazırla
+            switchView('clickerView'); // Başlangıçta tıklama merkezini göster
+        }
+
+        // Oyun başladığında başlatma fonksiyonunu çağır
+        document.addEventListener('DOMContentLoaded', initializeGame);
+        
+    </script>
+</body>
+</html>
