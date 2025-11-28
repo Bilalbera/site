@@ -3,24 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Oyun Platformu</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Tek Dosyada Mini Oyun Merkezi</title>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #1a1a2e; /* Koyu arka plan */
+            color: #ffffff;
+            padding-top: 20px;
+        }
+
+        #game-container {
+            width: 640px;
+            height: 480px;
+            margin: 20px auto;
+            border: 4px solid #00aaff; /* Canlı mavi çerçeve */
+            background-color: #2c2c54;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Canvas'ı içeride tutmak için */
+        }
+
+        #randomGameBtn {
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #00aaff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #randomGameBtn:hover {
+            background-color: #0077cc;
+        }
+        
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>🎮 Mini Oyun Merkezi</h1>
-        <p>Rastgele topluluk oyunlarını keşfet!</p>
+        <h1>👾 Rastgele Oyun Jeneratörü</h1>
+        <p>Hemen oyna!</p>
     </header>
 
     <div id="controls">
-        <button id="randomGameBtn">Rastgele Oyun Oyna</button>
+        <button id="randomGameBtn">Rastgele Oyun Yükle ve Oyna</button>
+        <p id="gameTitle" style="margin-top: 10px; font-weight: bold;">(Oyun Yüklenmeyi Bekliyor...)</p>
     </div>
     
     <div id="game-container">
-        <p>Hadi bir oyun seçin veya rastgele birine tıklayın!</p>
-    </div>
+        </div>
 
-    <script src="../engine/core.js"></script> 
-    <script src="app.js"></script>
+    <script>
+        // ------------------------------------------------------------------
+        // A) OYUN VERİSİ (Veritabanı Yerine)
+        // ------------------------------------------------------------------
+        const GAME_DATA = [
+            {
+                id: 1,
+                name: "Kırmızı Kare Kaçış",
+                author: "Geliştirici Alpha",
+                // Bu fonksiyon, oyunu çalıştıran kodun kendisidir.
+                run: function(canvas, ctx) {
+                    let x = 50;
+                    let y = 50;
+                    const speed = 5;
+
+                    function update() {
+                        // Klavye girişini kontrol et
+                        if (keys['ArrowRight']) x += speed;
+                        if (keys['ArrowLeft']) x -= speed;
+                        if (keys['ArrowDown']) y += speed;
+                        if (keys['ArrowUp']) y -= speed;
+
+                        // Sınırları kontrol et
+                        if (x < 0) x = 0;
+                        if (x > canvas.width - 20) x = canvas.width - 20;
+                        if (y < 0) y = 0;
+                        if (y > canvas.height - 20) y = canvas.height - 20;
+                    }
+
+                    function draw() {
+                        // Arka planı temizle
+                        ctx.fillStyle = '#2c2c54';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Kareyi çiz
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(x, y, 20, 20);
+                    }
+                    
+                    // Motorun bu oyun için döngüyü başlatmasını sağla
+                    window.GameEngine.startLoop(update, draw);
+                }
+            },
+            {
+                id: 2,
+                name: "Mavi Zıplayan Top",
+                author: "Geliştirici Beta",
+                run: function(canvas, ctx) {
+                    let x = canvas.width / 2;
+                    let y = canvas.height / 2;
+                    let dx = 3;
+                    let dy = 3;
+                    const radius = 15;
+
+                    function update() {
+                        x += dx;
+                        y += dy;
+
+                        // Duvarlarla çarpışma
+                        if (x + radius > canvas.width || x - radius < 0) {
+                            dx = -dx;
+                        }
+                        if (y + radius > canvas.height || y - radius < 0) {
+                            dy = -dy;
+                        }
+                    }
+
+                    function draw() {
+                        ctx.fillStyle = '#2c2c54';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius, 0, Math.PI * 2);
+                        ctx.fillStyle = 'blue';
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+
+                    window.GameEngine.startLoop(update, draw);
+                }
+            }
+            // İstediğiniz kadar yeni oyun ekleyebilirsiniz
+        ];
+
+        // ------------------------------------------------------------------
+        // B) OYUN MOTORU ÇEKİRDEĞİ (ENGINE CORE)
+        // ------------------------------------------------------------------
+        // Bu nesne, tüm oyunlar için temel motor işlevlerini sağlar.
+        window.GameEngine = {
+            isRunning: false,
+            frameRequest: null,
+            currentUpdate: null,
+            currentDraw: null,
+            keys: {}, // Klavye durumunu tutan obje
+            
+            // Tüm oyunlar bu fonksiyonla başlar
+            startLoop: function(updateFunc, drawFunc) {
+                // Eğer zaten çalışıyorsa, önceki döngüyü durdur
+                if (this.isRunning) {
+                    this.stopLoop();
+                }
+                
+                this.currentUpdate = updateFunc;
+                this.currentDraw = drawFunc;
+                this.isRunning = true;
+                this.loop();
+            },
+
+            // Oyun döngüsü (60 FPS için optimize edilmiştir)
+            loop: function() {
+                if (!window.GameEngine.isRunning) return;
+
+                // 1. Güncelleme
+                window.GameEngine.currentUpdate();
+                
+                // 2. Çizim
+                window.GameEngine.currentDraw();
+                
+                // Bir sonraki frame için tekrar çağır
+                window.GameEngine.frameRequest = requestAnimationFrame(window.GameEngine.loop);
+            },
+
+            // Klavye girişi için olay dinleyicilerini kurar
+            setupInput: function() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.key] = true;
+                });
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+            },
+
+            // Motoru tamamen durdurur
+            stopLoop: function() {
+                if (this.frameRequest) {
+                    cancelAnimationFrame(this.frameRequest);
+                }
+                this.isRunning = false;
+                this.currentUpdate = null;
+                this.currentDraw = null;
+            }
+        };
+
+        // Klavye objesini global olarak tanımla ki oyunlar erişebilsin
+        const keys = window.GameEngine.keys;
+
+        // ------------------------------------------------------------------
+        // C) PLATFORM MANTIK (APP.JS Yerine)
+        // ------------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('game-container');
+            const button = document.getElementById('randomGameBtn');
+            const titleDisplay = document.getElementById('gameTitle');
+            
+            // Klavye dinleyicilerini başlat
+            window.GameEngine.setupInput();
+
+            function loadRandomGame() {
+                // Eğer bir oyun çalışıyorsa durdur
+                window.GameEngine.stopLoop();
+                
+                // Konteyneri temizle (Canvas'ı kaldırmak için)
+                container.innerHTML = '';
+                
+                // Canvas elementini oluştur
+                const canvas = document.createElement('canvas');
+                canvas.width = 640;
+                canvas.height = 480;
+                container.appendChild(canvas);
+                const ctx = canvas.getContext('2d');
+
+                // Rastgele bir oyun seç
+                const randomIndex = Math.floor(Math.random() * GAME_DATA.length);
+                const selectedGame = GAME_DATA[randomIndex];
+
+                // Başlık bilgisini güncelle
+                titleDisplay.textContent = `${selectedGame.name} (Yazar: ${selectedGame.author})`;
+
+                // Oyunu çalıştır
+                try {
+                    selectedGame.run(canvas, ctx);
+                } catch (e) {
+                    console.error("Oyun yüklenirken bir hata oluştu:", e);
+                    titleDisplay.textContent = "HATA: Oyun yüklenemedi.";
+                    container.innerHTML = `<p style="color: red;">Oyun Yükleme Hatası!</p>`;
+                }
+            }
+
+            // Butona tıklama olayını ata
+            button.addEventListener('click', loadRandomGame);
+            
+            // Sayfa yüklendiğinde hemen bir oyun başlat
+            loadRandomGame();
+        });
+
+    </script>
 </body>
 </html>
