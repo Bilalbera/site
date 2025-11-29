@@ -41,6 +41,12 @@
             background-color: #ef4444; 
             color: #1f2937;
         }
+        /* Pasif buton stili (Yarışma sırasında) */
+        .nav-btn:disabled, .nav-btn[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
         /* Tıklama Pop-up Animasyonu */
         @keyframes floatUp {
             0% { transform: translateY(0); opacity: 1; }
@@ -223,12 +229,18 @@
         
         // Yapılandırmayı daha güvenli bir şekilde yükleme
         let FIREBASE_CONFIG = {};
+        let IS_FIREBASE_ENABLED = false;
         const initialConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
         if (initialConfigString && initialConfigString.trim() !== "") {
             try {
                 FIREBASE_CONFIG = JSON.parse(initialConfigString);
+                // Yapılandırma başarılıysa Firebase'i etkinleştir
+                if (FIREBASE_CONFIG && FIREBASE_CONFIG.projectId) {
+                    IS_FIREBASE_ENABLED = true;
+                }
             } catch (e) {
                 console.error("Firebase yapılandırması JSON ayrıştırma hatası:", e);
+                // Hata oluşsa bile IS_FIREBASE_ENABLED false kalacak.
             }
         }
         
@@ -281,12 +293,11 @@
         const timerDisplay = document.getElementById('timerDisplay');
         const competitionButton = document.getElementById('competitionButton');
         const clickerArea = document.getElementById('clickerArea');
-
-        // Navigasyon Butonları
         const navClicker = document.getElementById('navClicker');
         const navMarket = document.getElementById('navMarket');
         const navRebirthStore = document.getElementById('navRebirthStore');
         const navCompetition = document.getElementById('navCompetition');
+        const navButtons = [navClicker, navMarket, navRebirthStore, navCompetition];
         const rebirthButton = document.getElementById('rebirthButton'); 
 
         // Pazar Öğeleri Verisi (Kısaltıldı)
@@ -331,8 +342,43 @@
             }, 3000); 
         }
 
+        function toggleNavButtons(disabled) {
+            // Yarışma aktifken (disabled=true), navCompetition hariç tüm butonları devre dışı bırak
+            navButtons.forEach(btn => {
+                if (btn.id !== 'navCompetition') {
+                    btn.disabled = disabled;
+                }
+            });
+            // Nav Competition butonu her zaman aktif kalır, yarışma butonu kendi durumunu yönetir.
+            if (disabled) {
+                // Kilitli butonların renklerini de gri yap
+                 navClicker.classList.replace('bg-blue-600', 'bg-gray-600');
+                 navMarket.classList.replace('bg-yellow-600', 'bg-gray-600');
+                 navRebirthStore.classList.replace('bg-purple-600', 'bg-gray-600');
+                 navClicker.classList.remove('hover:bg-blue-700');
+                 navMarket.classList.remove('hover:bg-yellow-700');
+                 navRebirthStore.classList.remove('hover:bg-purple-700');
+            } else {
+                // Kilit açıkken renkleri geri getir
+                navClicker.classList.replace('bg-gray-600', 'bg-blue-600');
+                navMarket.classList.replace('bg-gray-600', 'bg-yellow-600');
+                navRebirthStore.classList.replace('bg-gray-600', 'bg-purple-600');
+                navClicker.classList.add('hover:bg-blue-700');
+                navMarket.classList.add('hover:bg-yellow-700');
+                navRebirthStore.classList.add('hover:bg-purple-700');
+            }
+        }
+
         function switchView(viewId) {
+            
+            // YENİ KONTROL: Eğer yarışma aktif ve kullanıcı yarışma görünümünden çıkmaya çalışıyorsa engelle
+            if (competitionActive && viewId !== 'competitionView') {
+                showMessage("Yarışma aktifken diğer sayfalara geçemezsiniz. Lütfen yarışmanın bitmesini bekleyin.", 'error');
+                return; 
+            }
+
             const wasInQueue = matchmakingStatus === 'in_queue';
+            const isCompetitionView = viewId === 'competitionView';
 
             document.querySelectorAll('.view-container').forEach(view => {
                 view.classList.add('hidden');
@@ -349,12 +395,18 @@
             
             if (viewId === 'marketView') renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
             if (viewId === 'rebirthStoreView') renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
-            if (viewId === 'competitionView') {
-                // Yarışma görünümüne geçildiğinde kuyruğa katıl
-                joinQueue();
+            
+            if (isCompetitionView) {
+                if (IS_FIREBASE_ENABLED) {
+                    joinQueue();
+                } else {
+                    // Firebase etkin değilse, yarışma butonunu devre dışı bırak
+                    timerDisplay.textContent = `Çevrimdışı Modda Aktif Değil`;
+                    competitionButton.textContent = "Çevrimiçi Değil";
+                    competitionButton.disabled = true;
+                }
             } else {
                 // Diğer görünümlere geçildiğinde kuyruktan çık
-                // Kuyruktan ayrılırken özel mesajı göster
                 leaveQueue(wasInQueue); 
                 endCompetition(true); // Gerekirse yarışmayı durdur
             }
@@ -365,10 +417,15 @@
         // ------------------------------------------------------------------
 
         async function initializeFirebase() {
-            // Yapılandırma yoksa çevrimdışı kal
-            if (Object.keys(FIREBASE_CONFIG).length === 0) {
-                console.warn("Firebase yapılandırması eksik veya hatalı. Çevrimiçi özellikler devre dışı.");
-                currentUserIdDisplay.textContent = "Çevrimdışı Mod (Yapılandırma Hatası)";
+            if (!IS_FIREBASE_ENABLED) {
+                console.warn("Firebase yapılandırması eksik. Çevrimiçi özellikler devre dışı bırakıldı.");
+                currentUserIdDisplay.textContent = "🔴 ÇEVRİMDİSİ MOD";
+                // Çevrimdışı modda bile yarışma sekmesine tıklandığında uyarı ver
+                document.getElementById('navCompetition').addEventListener('click', () => {
+                     if (!IS_FIREBASE_ENABLED) {
+                         showMessage("Online Yarışma, Firebase yapılandırması gerektirir.", 'error');
+                     }
+                });
                 return;
             }
             
@@ -398,7 +455,7 @@
                 
             } catch (error) {
                 console.error("Firebase başlatılırken hata oluştu:", error);
-                currentUserIdDisplay.textContent = "Hata! (Bkz. Konsol)";
+                currentUserIdDisplay.textContent = "🔴 HATA! (Bkz. Konsol)";
             }
         }
 
@@ -530,7 +587,7 @@
             
             // Eğer eşleşme aranırken çıkıldıysa, özel mesajı göster
             if (currentStatus === 'in_queue' && wasInQueueBeforeLeaving) {
-                showMessage("Kuyruktan başarıyla ayrıldınız. Yarıştan vazgeçildi.", 'leave');
+                showMessage("Yarıştan Ayrıldın", 'leave'); // Kırmızı arka planlı mesaj
             }
             
             updateCompetitionUI();
@@ -542,8 +599,8 @@
             const q = collection(db, RACE_QUEUE_PATH); 
             
             onSnapshot(q, (snapshot) => {
-                if (document.getElementById('competitionView').classList.contains('hidden')) {
-                    // Kullanıcı Yarışma Görünümünde değilse, sadece dinle ama eşleştirme yapma
+                if (document.getElementById('competitionView').classList.contains('hidden') && !competitionActive) {
+                    // Kullanıcı Yarışma Görünümünde değil ve aktif bir yarışma yoksa, eşleştirme yapma
                     return; 
                 }
                 
@@ -634,12 +691,14 @@
                     if (myDoc.exists() && myDoc.data().status === 'in_queue' && 
                         opponentDoc.exists() && opponentDoc.data().status === 'in_queue') {
                         
+                        // Transaction'dan hemen sonra local state'i güncellemek kritik.
+                        matchmakingStatus = 'in_match';
+                        opponentId = potentialOpponentId;
+                        
                         transaction.update(myRef, { status: 'in_match', opponentId: potentialOpponentId, matchStart: Date.now() });
                         transaction.update(opponentRef, { status: 'in_match', opponentId: userId, matchStart: Date.now() });
                         
-                        // Local state'i güncelle
-                        matchmakingStatus = 'in_match';
-                        opponentId = potentialOpponentId;
+                        // Local state'i güncelledikten sonra Yarışmayı başlat.
                         startCompetition(opponentId);
                         showMessage(`Eşleşme bulundu! Rakibiniz: ${opponentId.substring(0, 8)}...`, 'success');
                     } else {
@@ -660,13 +719,20 @@
             const totalUsersInQueue = queueUsers.length + (matchmakingStatus === 'in_queue' ? 1 : 0);
             
             if (matchmakingStatus === 'idle') {
+                toggleNavButtons(false); // Butonları serbest bırak
                 timerDisplay.textContent = `Süre: Hazır`;
                 competitionButton.textContent = "YARIŞMAYA BAŞLA";
-                competitionButton.disabled = false;
+                competitionButton.disabled = !IS_FIREBASE_ENABLED; // Firebase etkin değilse devre dışı
                 competitionButton.classList.replace('bg-gray-600', 'bg-green-600');
                 competitionButton.classList.replace('bg-red-600', 'bg-green-600');
-                competitionButton.classList.add('hover:bg-green-700');
+                if (IS_FIREBASE_ENABLED) {
+                     competitionButton.classList.add('hover:bg-green-700');
+                } else {
+                     competitionButton.classList.replace('bg-green-600', 'bg-gray-600');
+                     competitionButton.textContent = "Çevrimiçi Değil";
+                }
             } else if (matchmakingStatus === 'in_queue') {
+                toggleNavButtons(false); // Kuyrukta iken navigasyon serbest
                 competitionActive = false;
                 competitionButton.disabled = true;
                 competitionButton.classList.replace('bg-green-600', 'bg-gray-600');
@@ -684,7 +750,13 @@
                 }
                 
             } else if (matchmakingStatus === 'in_match') {
-                // Eşleşme aktif, buton tıklamaya hazır
+                if(competitionActive) {
+                    toggleNavButtons(true); // Yarışma aktif: Butonları KİLİTLE
+                } else {
+                    // Eşleşme bulundu ama yarışma henüz başlamadıysa veya bittiyse (endCompetition tarafından yönetilir)
+                    toggleNavButtons(false); 
+                }
+                
                 competitionButton.disabled = false;
                 competitionButton.textContent = `TIKLA! Rakip: ${opponentId.substring(0, 8)}...`;
                 competitionButton.classList.replace('bg-green-600', 'bg-red-600');
@@ -733,6 +805,9 @@
             if (competitionTimer) clearInterval(competitionTimer);
             competitionStartTime = Date.now();
             
+            // Yarışma başladığı anda navigasyon butonlarını kilitle
+            toggleNavButtons(true); 
+
             competitionTimer = setInterval(() => {
                 const elapsedTime = Math.floor((Date.now() - competitionStartTime) / 1000);
                 const remainingTime = COMPETITION_DURATION_SECONDS - elapsedTime;
@@ -777,9 +852,12 @@
             clearInterval(competitionTimer);
             competitionTimer = null;
             
+            // Navigasyon butonlarını serbest bırak
+            toggleNavButtons(false);
+
             // Kuyruk durumunu sıfırla (Maç bitti)
             // isLeaving true ise, leaveQueue içindeki özel mesajı göstermemek için parametre vermiyoruz.
-            await leaveQueue(); 
+            await leaveQueue(false); // Sadece state temizleme, özel ayrılma mesajı gösterme
             
             if (!isLeaving) {
                 timerDisplay.textContent = `Süre: BİTTİ!`;
@@ -798,6 +876,10 @@
          * Yarışma butonuna tıklama işleyicisi.
          */
         function handleCompetitionClick() {
+            if (!IS_FIREBASE_ENABLED) {
+                showMessage("Online Yarışma, Firebase yapılandırması olmadan kullanılamaz.", 'error');
+                return;
+            }
             if (matchmakingStatus === 'idle') {
                 // Eğer boşta ise, kuyruğa katıl
                 joinQueue();
