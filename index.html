@@ -151,8 +151,8 @@
         
         <div id="missionsView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-green-500">
-                <h2 class="text-3xl font-bold mb-6 text-green-300 text-center">GÜNLÜK VE TEKRARLANABİLİR GÖREVLER</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">Görevleri tamamlayarak özel Para ve RBP ödülleri kazanın!</p>
+                <h2 class="text-3xl font-bold mb-6 text-green-300 text-center">GÖREVLER</h2>
+                <p class="text-sm text-gray-300 mb-4 text-center">İlk 4 görev kalıcıdır. Sonrakiler tamamlandıkça yerini yeni bir görev alır.</p>
                 
                 <div id="missionList" class="space-y-4">
                     </div>
@@ -260,6 +260,7 @@
         let totalClicks = 0; 
         let totalMarketUpgradesBought = 0;
         let missionStates = {}; 
+        let rotatingMissionIndex = 0; // YENİ: Dönen görevler için sayaç
 
         // Firebase Yarışma Durumu (Kısaltıldı)
         let competitionActive = false;
@@ -314,12 +315,21 @@
             { id: 103, name: "Otomatik Tıklama", cost: 50, initialCost: 50, multiplier: 2.5, type: 'autoclick', value: 1, level: 0, maxLevel: 10, description: "Saniyede 1 Otomatik Tıklama ekler. (Kalıcı)" }
         ];
         
-        // GÖREVLER VERİSİ (Kısaltıldı)
-        const MISSIONS = [
+        // GÖREVLER VERİSİ (KALICI GÖREVLER)
+        // Bu görevler tamamlandıktan sonra yerlerine Dönen Görevler gelecektir.
+        let MISSIONS = [
             { id: 'm1', name: "Acemi Tıklayıcı", requirementType: 'totalClicks', requiredAmount: 1000, reward: { type: 'coin', amount: 5000 }, description: "Toplamda 1.000 kez tıklama yap." },
             { id: 'm2', name: "Yatırımcı Ruh", requirementType: 'passiveRate', requiredAmount: 10, reward: { type: 'rbp', amount: 5 }, description: "Pasif SBK oranını 10'a ulaştır." },
             { id: 'm3', name: "Açgözlü Müşteri", requirementType: 'upgradesBought', requiredAmount: 5, reward: { type: 'coin', amount: 15000 }, description: "Pazardan toplam 5 yükseltme satın al." },
             { id: 'm4', name: "Rebirth Uzmanı", requirementType: 'rebirths', requiredAmount: 1, reward: { type: 'rbp', amount: 10 }, description: "İlk Yeniden Doğuşunuzu (Rebirth) gerçekleştirin." }
+        ];
+
+        // DÖNÜŞÜMLÜ GÖREVLER HAVUZU (TAMAMLANINCA YERİNE BİR SONRAKİ GELİR)
+        const ROTATING_MISSIONS = [
+            { id: 'r1', name: "Yoğun Tıklama", requirementType: 'totalClicks', requiredAmount: 5000, reward: { type: 'coin', amount: 30000 }, description: "Toplamda 5.000 kez tıklama yap." },
+            { id: 'r2', name: "Pasif Ustalık", requirementType: 'passiveRate', requiredAmount: 50, reward: { type: 'rbp', amount: 8 }, description: "Pasif SBK oranını 50'ye ulaştır." },
+            { id: 'r3', name: "Hızlı Yükseliş", requirementType: 'upgradesBought', requiredAmount: 10, reward: { type: 'coin', amount: 50000 }, description: "Pazardan toplam 10 yükseltme satın al." },
+            { id: 'r4', name: "Çoklu Rebirth", requirementType: 'rebirths', requiredAmount: 3, reward: { type: 'rbp', amount: 15 }, description: "Toplam 3 Yeniden Doğuş (Rebirth) gerçekleştirin." }
         ];
 
 
@@ -663,7 +673,7 @@
         }
         
         // ------------------------------------------------------------------
-        // GÖREVLER (MISSIONS) MANTIK (Kısaltıldı)
+        // GÖREVLER (MISSIONS) MANTIK
         // ------------------------------------------------------------------
         
         function getMissionProgressValue(mission) {
@@ -680,6 +690,7 @@
         function checkMissionProgress() {
             let missionUpdated = false;
             MISSIONS.forEach(mission => {
+                // Görev durumu yoksa veya tamamlanmış/alınmış ise devam etme
                 if (missionStates[mission.id]?.claimed || missionStates[mission.id]?.completed) return;
                 
                 const currentValue = getMissionProgressValue(mission);
@@ -696,6 +707,7 @@
             if (missionUpdated) {
                 showMessage("Yeni bir görev tamamlandı! Ödülünüzü 'Görevler' sekmesinden alın.", 'info');
             }
+            // Görevler sekmesi açıksa, yeniden çiz
             if (!document.getElementById('missionsView').classList.contains('hidden')) {
                 renderMissions();
             }
@@ -706,6 +718,10 @@
             missionListContainer.innerHTML = '';
             
             MISSIONS.forEach(mission => {
+                // Görev durumu yoksa, yeni bir boş durum oluştur
+                if (!missionStates[mission.id]) {
+                    missionStates[mission.id] = {};
+                }
                 const state = missionStates[mission.id] || {};
                 const isCompleted = state.completed || false;
                 const isClaimed = state.claimed || false;
@@ -740,11 +756,9 @@
                                 <span class="text-xs text-gray-400">İlerleme: ${formatNumber(currentValue)} / ${formatNumber(mission.requiredAmount)}</span>
                             </div>
 
-                            <button class="mission-claim-btn px-4 py-2 mt-2 sm:mt-0 rounded-lg font-bold transition duration-200" 
+                            <button class="mission-claim-btn px-4 py-2 mt-2 sm:mt-0 rounded-lg font-bold transition duration-200 ${buttonColor}" 
                                     data-mission-id="${mission.id}"
-                                    ${buttonDisabled ? 'disabled' : ''}
-                                    style="background-color: ${buttonColor.includes('hover') ? buttonColor.split(' ')[0].split('-')[1] : buttonColor.split('-')[1]}; color: ${isClaimed ? '#a7f3d0' : '#1f2937'};"
-                                    class="${buttonColor}">
+                                    ${buttonDisabled ? 'disabled' : ''}>
                                 ${buttonText}
                             </button>
                         </div>
@@ -757,7 +771,7 @@
                 missionListContainer.innerHTML += missionHtml;
             });
 
-            // Ödül Alma Butonlarına Olay Dinleyici Ekle
+            // Ödül Alma Butonlarına Olay Dinleyici Ekle (Render sonrası butonları hedefle)
             document.querySelectorAll('#missionList .mission-claim-btn').forEach(button => {
                 if (!button.disabled && button.textContent === 'ÖDÜLÜ AL!') {
                     button.addEventListener('click', (e) => {
@@ -768,6 +782,45 @@
             });
         }
         
+        // YENİ: Tamamlanan görev yerine yeni bir görev ekler (sadece kalıcı görevler için)
+        function replaceMission(completedMissionId) {
+            // Sadece başlangıçtaki kalıcı 4 görev (m1, m2, m3, m4) için yeni görev ekle
+            const isPermanentMission = ['m1', 'm2', 'm3', 'm4'].includes(completedMissionId);
+
+            if (isPermanentMission) {
+                const completedMissionIndex = MISSIONS.findIndex(m => m.id === completedMissionId);
+                
+                if (completedMissionIndex !== -1) {
+                    
+                    // Dönen listeden sırayla yeni bir görev seç
+                    const newMissionData = ROTATING_MISSIONS[rotatingMissionIndex];
+                    
+                    // Yeni görev nesnesini oluştur
+                    const tempId = `R${Date.now()}`; // Yeni benzersiz ID
+                    const newMission = { 
+                        ...newMissionData, 
+                        id: tempId, // Yeni ID
+                        name: `TEKRARLANABİLİR GÖREV: ${newMissionData.name}` // İsim güncellendi
+                    }; 
+                    
+                    // Eski görevi listeden çıkar
+                    MISSIONS.splice(completedMissionIndex, 1);
+                    
+                    // Yeni görevi listeye ekle
+                    MISSIONS.push(newMission);
+                    
+                    // rotatingMissionIndex'i bir sonraki göreve hazırla
+                    rotatingMissionIndex = (rotatingMissionIndex + 1) % ROTATING_MISSIONS.length;
+                    
+                    // Yeni görev için missionStates başlat (Zaten checkMissionProgress ile yapılabilir, ama garanti olsun)
+                    missionStates[newMission.id] = { completed: false, claimed: false };
+                    
+                    showMessage(`Yeni Tekrarlanabilir Görev: "${newMission.name}" listeye eklendi!`, 'info');
+                }
+            }
+            // Diğer görevler (zaten dönen görevler) tamamlandığında listede kalır, sadece durumu claimed olur.
+        }
+
         function claimMissionReward(missionId) {
             const mission = MISSIONS.find(m => m.id === missionId);
             const state = missionStates[missionId];
@@ -787,6 +840,9 @@
 
             missionStates[missionId].claimed = true;
             
+            // YENİ: Görevi tamamlanmış olarak işaretledikten sonra, kalıcı görevse yerini değiştir
+            replaceMission(missionId); 
+            
             updateDisplay();
             renderMissions();
             saveGame();
@@ -805,6 +861,8 @@
                 totalClicks, 
                 totalMarketUpgradesBought, 
                 missionStates, 
+                rotatingMissionIndex, // YENİ KAYIT
+                activeMissions: MISSIONS, // Aktif görev listesini de kaydet
                 marketItems: MARKET_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
                 rebirthStoreItems: REBIRTH_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })), 
             };
@@ -824,8 +882,8 @@
                 passiveMultiplier = gameState.passiveMultiplier || 1;
                 rebirthPoints = gameState.rebirthPoints || 0; 
                 rbpStartingCoinBonus = gameState.rbpStartingCoinBonus || 0; 
-                rbpStartingPassiveBonus = gameState.rbpStartingPassiveBonus || 0; // YENİ YÜKLEME
-                rbpPermanentClickMultiplierBonus = gameState.rbpPermanentClickMultiplierBonus || 0; // YENİ YÜKLEME
+                rbpStartingPassiveBonus = gameState.rbpStartingPassiveBonus || 0; 
+                rbpPermanentClickMultiplierBonus = gameState.rbpPermanentClickMultiplierBonus || 0; 
                 rbpPassiveSpeedBonus = gameState.rbpPassiveSpeedBonus || 1; 
                 rbpAutoclickerLevel = gameState.rbpAutoclickerLevel || 0; 
                 lastSaveTime = gameState.lastSaveTime || Date.now(); 
@@ -833,6 +891,12 @@
                 totalClicks = gameState.totalClicks || 0; 
                 totalMarketUpgradesBought = gameState.totalMarketUpgradesBought || 0; 
                 missionStates = gameState.missionStates || {}; 
+                rotatingMissionIndex = gameState.rotatingMissionIndex || 0; // YENİ YÜKLEME
+                
+                // Aktif görev listesini yükle
+                if (gameState.activeMissions) {
+                    MISSIONS = gameState.activeMissions;
+                }
 
                 // Market öğelerini ve çarpanlarını yükle
                 if (gameState.marketItems) {
@@ -899,7 +963,7 @@
         }
         
         // ------------------------------------------------------------------
-        // OYUN BAŞLATMA (Kısaltıldı)
+        // OYUN BAŞLATMA
         // ------------------------------------------------------------------
 
         function startPassiveIncomeLoop() {
