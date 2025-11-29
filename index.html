@@ -249,8 +249,8 @@
         let passiveMultiplier = 1; 
         let rebirthPoints = 0;     
         let rbpStartingCoinBonus = 0; 
-        let rbpStartingPassiveBonus = 0; // YENİ: Rebirth sonrası başlangıç pasif geliri
-        let rbpPermanentClickMultiplierBonus = 0; // YENİ: RBP ile kalıcı tıklama çarpanı
+        let rbpStartingPassiveBonus = 0; 
+        let rbpPermanentClickMultiplierBonus = 0; 
         let rbpPassiveSpeedBonus = 1; 
         let rbpAutoclickerLevel = 0;  
         let lastSaveTime = Date.now();
@@ -260,7 +260,7 @@
         let totalClicks = 0; 
         let totalMarketUpgradesBought = 0;
         let missionStates = {}; 
-        let rotatingMissionIndex = 0; // YENİ: Dönen görevler için sayaç
+        let rotatingMissionIndex = 0; 
 
         // Firebase Yarışma Durumu (Kısaltıldı)
         let competitionActive = false;
@@ -298,25 +298,24 @@
         const navButtons = [navClicker, navMarket, navMissions, navRebirthStore, navCompetition];
         const rebirthButton = document.getElementById('rebirthButton'); 
 
-        // Pazar Öğeleri Verisi (GÜNCELLENDİ)
+        // Pazar Öğeleri Verisi 
         const MARKET_ITEMS = [
             { id: 1, name: "Gelişmiş Parmak", cost: 10, initialCost: 10, multiplier: 1.5, type: 'click', value: 1, level: 0, maxLevel: 50, description: "Tıklama başına kazancı 1 artırır." },
-            { id: 5, name: "Lazer Parmak", cost: 100, initialCost: 100, multiplier: 1.6, type: 'click', value: 3, level: 0, maxLevel: 30, description: "Tıklama başına kazancı 3 artırır. (Kullanıcının isteği)" }, // YENİ
+            { id: 5, name: "Lazer Parmak", cost: 100, initialCost: 100, multiplier: 1.6, type: 'click', value: 3, level: 0, maxLevel: 30, description: "Tıklama başına kazancı 3 artırır. (Kullanıcının isteği)" }, 
             { id: 2, name: "Otomatik Tıklayıcı", cost: 100, initialCost: 100, multiplier: 1.15, type: 'passive', value: 1, level: 0, maxLevel: 100, description: "Saniye başına 1 pasif gelir sağlar." },
             { id: 4, name: "İş Merkezi", cost: 5000, initialCost: 5000, multiplier: 1.3, type: 'passive', value: 50, level: 0, maxLevel: 10, description: "Saniye başına 50 pasif gelir sağlar." },
-            { id: 6, name: "Enerji Santrali", cost: 100000, initialCost: 100000, multiplier: 2.0, type: 'multiplier', value: 1.05, level: 0, maxLevel: 5, description: "Tüm Pasif SBK gelirini %5 (x1.05) artırır. (Kalıcı Çarpan)" }, // YENİ ÇARPAN
+            { id: 6, name: "Enerji Santrali", cost: 100000, initialCost: 100000, multiplier: 2.0, type: 'multiplier', value: 1.05, level: 0, maxLevel: 5, description: "Tüm Pasif SBK gelirini %5 (x1.05) artırır. (Kalıcı Çarpan)" }, 
         ];
 
-        // RBP Mağazası Öğeleri Verisi (GÜNCELLENDİ)
+        // RBP Mağazası Öğeleri Verisi 
         const REBIRTH_ITEMS = [
             { id: 101, name: "Başlangıç Parası", cost: 5, initialCost: 5, multiplier: 1.5, type: 'starting_coin', value: 10, level: 0, maxLevel: 10, description: "Her Rebirth sonrası 10 fazladan para ile başlar." },
-            { id: 104, name: "Kalıcı Tıklama Desteği", cost: 20, initialCost: 20, multiplier: 1.8, type: 'rebirth_multiplier_bonus', value: 0.05, level: 0, maxLevel: 5, description: "Tüm Rebirth Çarpanına +0.05 kalıcı bonus ekler." }, // YENİ
-            { id: 105, name: "Başlangıç Pasif Geliri", cost: 30, initialCost: 30, multiplier: 2.0, type: 'starting_passive', value: 5, level: 0, maxLevel: 5, description: "Her Rebirth sonrası 5 Pasif SBK geliri ile başlar. (SBK'ya eklenir)" }, // YENİ
+            { id: 104, name: "Kalıcı Tıklama Desteği", cost: 20, initialCost: 20, multiplier: 1.8, type: 'rebirth_multiplier_bonus', value: 0.05, level: 0, maxLevel: 5, description: "Tüm Rebirth Çarpanına +0.05 kalıcı bonus ekler." }, 
+            { id: 105, name: "Başlangıç Pasif Geliri", cost: 30, initialCost: 30, multiplier: 2.0, type: 'starting_passive', value: 5, level: 0, maxLevel: 5, description: "Her Rebirth sonrası 5 Pasif SBK geliri ile başlar. (SBK'ya eklenir)" }, 
             { id: 103, name: "Otomatik Tıklama", cost: 50, initialCost: 50, multiplier: 2.5, type: 'autoclick', value: 1, level: 0, maxLevel: 10, description: "Saniyede 1 Otomatik Tıklama ekler. (Kalıcı)" }
         ];
         
         // GÖREVLER VERİSİ (KALICI GÖREVLER)
-        // Bu görevler tamamlandıktan sonra yerlerine Dönen Görevler gelecektir.
         let MISSIONS = [
             { id: 'm1', name: "Acemi Tıklayıcı", requirementType: 'totalClicks', requiredAmount: 1000, reward: { type: 'coin', amount: 5000 }, description: "Toplamda 1.000 kez tıklama yap." },
             { id: 'm2', name: "Yatırımcı Ruh", requirementType: 'passiveRate', requiredAmount: 10, reward: { type: 'rbp', amount: 5 }, description: "Pasif SBK oranını 10'a ulaştır." },
@@ -362,7 +361,7 @@
         }
 
         function toggleNavButtons(disabled) {
-            // ... (Navigasyon butonu mantığı - Değişmedi)
+            // ... (Navigasyon butonu mantığı)
             navButtons.forEach(btn => {
                 if (btn.id !== 'navCompetition') {
                     btn.disabled = disabled;
@@ -434,7 +433,7 @@
         // ------------------------------------------------------------------
 
         async function initializeFirebase() {
-            // ... (Firebase başlatma mantığı - Kısaltıldı)
+            // ... (Firebase başlatma mantığı)
             if (!IS_FIREBASE_ENABLED) {
                 console.warn("Firebase yapılandırması eksik. Çevrimiçi özellikler devre dışı bırakıldı.");
                 currentUserIdDisplay.textContent = "🔴 ÇEVRİMDİSİ MOD";
@@ -476,7 +475,7 @@
             }
         }
 
-        // Yarışma ve Liderlik Tablosu fonksiyonları (Kısaltıldı, eski hali korunuyor)
+        // Yarışma ve Liderlik Tablosu fonksiyonları (Kısaltıldı)
         async function loadCompetitionScore() { /* ... */ }
         async function updateCompetitionScore() { /* ... */ }
         function startLeaderboardListener() { /* ... */ }
@@ -527,7 +526,7 @@
             const netClick = baseClickValue * rebirthMultiplier;
             const netPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier;
             
-            const totalRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus + (rebirths * 0.20)).toFixed(2); // Toplam çarpan
+            const totalRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus + (rebirths * 0.20)).toFixed(2); 
 
             if (coinDisplay) coinDisplay.textContent = formatNumber(coins);
             if (rebirthDisplay) rebirthDisplay.textContent = formatNumber(rebirths);
@@ -560,7 +559,7 @@
                  
                  if (item.type === 'click') baseClickValue += item.value;
                  else if (item.type === 'passive') basePassiveRate += item.value;
-                 else if (item.type === 'multiplier') passiveMultiplier *= item.value; // YENİ ÇARPAN ALIMI
+                 else if (item.type === 'multiplier') passiveMultiplier *= item.value; 
                  
                  totalMarketUpgradesBought += 1;
                  
@@ -579,10 +578,10 @@
                 item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
                 
                 if (item.type === 'starting_coin') rbpStartingCoinBonus += item.value;
-                else if (item.type === 'starting_passive') rbpStartingPassiveBonus += item.value; // YENİ BAŞLANGIÇ PASİFİ
-                else if (item.type === 'rebirth_multiplier_bonus') { // YENİ KALICI ÇARPAN
+                else if (item.type === 'starting_passive') rbpStartingPassiveBonus += item.value; 
+                else if (item.type === 'rebirth_multiplier_bonus') { 
                     rbpPermanentClickMultiplierBonus += item.value;
-                    rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); // Anında güncelle
+                    rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); 
                 }
                 else if (item.type === 'autoclick') { 
                     rbpAutoclickerLevel += item.value;
@@ -609,12 +608,12 @@
 
             // Rebirth sonrası başlangıç değerleri:
             coins = rbpStartingCoinBonus; 
-            basePassiveRate = rbpStartingPassiveBonus; // RBP'den gelen başlangıç pasifi
+            basePassiveRate = rbpStartingPassiveBonus; 
             baseClickValue = 1;
             passiveMultiplier = 1; 
 
             MARKET_ITEMS.forEach(item => { item.level = 0; item.cost = item.initialCost; });
-            // Çarpanı olan itemler yeniden satın alınacak, bu yüzden passiveMultiplier'ı 1'e ayarladık.
+            // Market itemlerinin level ve cost değerleri sıfırlandı.
 
             showMessage(`Yeniden Doğuş Başarılı! Kazanılan RBP: ${rbpGained}. Kalıcı Çarpanınız: x${rebirthMultiplier.toFixed(2)}`, 'success');
             updateDisplay();
@@ -625,7 +624,7 @@
         }
 
         function renderMarket(items, container, buyFunction, currency, currencySymbol) {
-            // ... (Pazar renderlama mantığı - Değişmedi)
+            // ... (Pazar renderlama mantığı)
             if (!container) return; 
             container.innerHTML = '';
             
@@ -717,6 +716,9 @@
             if (!missionListContainer) return;
             missionListContainer.innerHTML = '';
             
+            // Yeni Görev HTML'lerini saklamak için geçici bir dizi
+            const missionHtmls = [];
+
             MISSIONS.forEach(mission => {
                 // Görev durumu yoksa, yeni bir boş durum oluştur
                 if (!missionStates[mission.id]) {
@@ -746,8 +748,8 @@
                 const rewardAmount = formatNumber(mission.reward.amount);
                 
                 const missionHtml = `
-                    <div class="p-4 rounded-lg bg-gray-700 shadow-lg border border-green-500">
-                        <h3 class="text-xl font-bold text-green-300">${mission.name}</h3>
+                    <div class="p-4 rounded-lg bg-gray-700 shadow-lg border ${isClaimed ? 'border-gray-500' : isCompleted ? 'border-yellow-500' : 'border-green-500'}">
+                        <h3 class="text-xl font-bold ${isCompleted && !isClaimed ? 'text-yellow-300' : 'text-green-300'}">${mission.name}</h3>
                         <p class="text-sm text-gray-300 mt-1">${mission.description}</p>
                         
                         <div class="mt-3 flex justify-between items-center">
@@ -768,11 +770,16 @@
                         </div>
                     </div>
                 `;
-                missionListContainer.innerHTML += missionHtml;
+                // HTML'i doğrudan DOM'a eklemek yerine diziye ekle
+                missionHtmls.push(missionHtml);
             });
+            
+            // Tüm HTML'i tek seferde DOM'a ekle
+            missionListContainer.innerHTML = missionHtmls.join('');
 
-            // Ödül Alma Butonlarına Olay Dinleyici Ekle (Render sonrası butonları hedefle)
+            // Ödül Alma Butonlarına Olay Dinleyici Ekle (Yeni oluşturulan butonları hedefle)
             document.querySelectorAll('#missionList .mission-claim-btn').forEach(button => {
+                // Sadece ALINMAMIŞ ve TAMAMLANMIŞ butonları hedefle
                 if (!button.disabled && button.textContent === 'ÖDÜLÜ AL!') {
                     button.addEventListener('click', (e) => {
                         const missionId = e.currentTarget.getAttribute('data-mission-id');
@@ -812,7 +819,7 @@
                     // rotatingMissionIndex'i bir sonraki göreve hazırla
                     rotatingMissionIndex = (rotatingMissionIndex + 1) % ROTATING_MISSIONS.length;
                     
-                    // Yeni görev için missionStates başlat (Zaten checkMissionProgress ile yapılabilir, ama garanti olsun)
+                    // Yeni görev için missionStates başlat (Gerekli)
                     missionStates[newMission.id] = { completed: false, claimed: false };
                     
                     showMessage(`Yeni Tekrarlanabilir Görev: "${newMission.name}" listeye eklendi!`, 'info');
@@ -838,9 +845,10 @@
                 showMessage(`${mission.reward.amount} RBP kazandınız!`, 'success');
             }
 
+            // Ödül alındı olarak işaretle
             missionStates[missionId].claimed = true;
             
-            // YENİ: Görevi tamamlanmış olarak işaretledikten sonra, kalıcı görevse yerini değiştir
+            // Görev değiştirme mantığını çalıştır
             replaceMission(missionId); 
             
             updateDisplay();
@@ -855,14 +863,14 @@
         function saveGame() {
             const gameState = {
                 coins, baseClickValue, basePassiveRate, rebirths, rebirthMultiplier, passiveMultiplier, rebirthPoints,
-                rbpStartingCoinBonus, rbpStartingPassiveBonus, rbpPermanentClickMultiplierBonus, // YENİLER
+                rbpStartingCoinBonus, rbpStartingPassiveBonus, rbpPermanentClickMultiplierBonus, 
                 rbpPassiveSpeedBonus, rbpAutoclickerLevel,
                 lastSaveTime: Date.now(),
                 totalClicks, 
                 totalMarketUpgradesBought, 
                 missionStates, 
-                rotatingMissionIndex, // YENİ KAYIT
-                activeMissions: MISSIONS, // Aktif görev listesini de kaydet
+                rotatingMissionIndex, 
+                activeMissions: MISSIONS, 
                 marketItems: MARKET_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
                 rebirthStoreItems: REBIRTH_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })), 
             };
@@ -891,7 +899,7 @@
                 totalClicks = gameState.totalClicks || 0; 
                 totalMarketUpgradesBought = gameState.totalMarketUpgradesBought || 0; 
                 missionStates = gameState.missionStates || {}; 
-                rotatingMissionIndex = gameState.rotatingMissionIndex || 0; // YENİ YÜKLEME
+                rotatingMissionIndex = gameState.rotatingMissionIndex || 0; 
                 
                 // Aktif görev listesini yükle
                 if (gameState.activeMissions) {
