@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bilalbera'nın Click Oyunu)</title>
+    <title>Süper Tıklama Oyunu (Online Yarışma)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -14,28 +14,55 @@
         /* Tıklama Butonuna Özel Stil */
         #clickButton {
             transition: all 0.1s ease;
-            box-shadow: 0 6px #0d47a1; /* Daha koyu gölge */
+            box-shadow: 0 6px #0d47a1; 
+            position: relative; 
         }
         #clickButton:active {
             box-shadow: 0 0 #0d47a1;
             transform: translateY(6px);
         }
-        /* Market kartları için kaydırma çubuğu stili */
-        #marketItems, #rebirthStoreItems {
+        /* Kaydırma çubuğu stili */
+        #marketItems, #rebirthStoreItems, #leaderboard {
             max-height: 500px;
             overflow-y: auto;
         }
         .view-container {
-            min-height: 550px; /* Görünümler arası geçişte boyutu korumak için */
+            min-height: 550px; 
         }
         .nav-btn.active {
-            background-color: #f59e0b; /* Aktif sekme rengi */
+            background-color: #f59e0b; 
             color: #1f2937;
         }
-        /* RBP Mağazası Butonu için özel stil */
         #navRebirthStore.active {
-            background-color: #a78bfa; /* Mor ton */
+            background-color: #a78bfa; 
             color: #1f2937;
+        }
+        #navCompetition.active {
+            background-color: #ef4444; 
+            color: #1f2937;
+        }
+        /* Tıklama Pop-up Animasyonu */
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        .click-popup {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #34d399; /* Yeşil tonu */
+            pointer-events: none;
+            user-select: none;
+            animation: floatUp 1s ease-out forwards;
+            white-space: nowrap;
+        }
+        
+        #competitionButton {
+            transition: background-color 0.2s;
+        }
+        #competitionButton:disabled {
+            background-color: #4b5563; /* Gri renk */
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -43,26 +70,26 @@
 
     <!-- Ana Oyun Konteyneri -->
     <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Çevrimdışı Kazanç!</h1>
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Online Rekabet</h1>
 
         <!-- Durum Bilgileri (Üst Panel) -->
         <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
-            <!-- 1. Para -->
+            <!-- Para -->
             <div class="col-span-1">
                 <p class="text-base">💰 Para:</p>
                 <span id="coinDisplay" class="font-bold text-yellow-400 text-3xl block">0</span>
             </div>
-            <!-- 2. Rebirth -->
+            <!-- Rebirth -->
             <div class="col-span-1">
                 <p class="text-base">🌟 Rebirth:</p>
                 <span id="rebirthDisplay" class="font-bold text-indigo-400 text-3xl block">0</span>
             </div>
-            <!-- 3. RBP -->
+            <!-- RBP -->
             <div class="col-span-1">
                 <p class="text-base text-purple-300">⚛️ RBP (Puan):</p>
                 <span id="rbpDisplay" class="font-semibold text-purple-400 text-2xl block">0</span>
             </div>
-             <!-- 4. SBK (Net) -->
+             <!-- SBK (Net) -->
             <div class="col-span-1">
                 <p class="text-base text-red-300">⚙️ Pasif (SBK):</p>
                 <span id="passiveRateDisplay" class="font-semibold text-red-400 text-2xl block">0</span>
@@ -81,9 +108,10 @@
 
         <!-- Gezinme (Navigation) -->
         <nav class="flex justify-center flex-wrap gap-4 mb-6">
-            <button id="navClicker" class="nav-btn active px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold transition duration-150" onclick="switchView('clickerView')">Tıklama Merkezi</button>
-            <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150" onclick="switchView('marketView')">Pazar (Para)</button>
-            <button id="navRebirthStore" class="nav-btn px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 font-bold transition duration-150" onclick="switchView('rebirthStoreView')">RBP Mağazası</button>
+            <button id="navClicker" class="nav-btn active px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold transition duration-150">Tıklama Merkezi</button>
+            <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150">Pazar (Para)</button>
+            <button id="navRebirthStore" class="nav-btn px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 font-bold transition duration-150">RBP Mağazası</button>
+            <button id="navCompetition" class="nav-btn px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-bold transition duration-150">💥 Online Yarışma</button>
         </nav>
 
         <!-- Görünüm Konteynerleri -->
@@ -93,17 +121,20 @@
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-blue-500">
                 <h2 class="text-3xl font-bold mb-6 text-blue-300 text-center">Tıkla ve Kazan!</h2>
                 
-                <!-- Tıklama Butonu -->
-                <button id="clickButton" 
-                        class="w-full h-40 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-5xl rounded-lg border-b-6 border-blue-800 active:border-b-4 transition-all duration-75">
-                    TIKLA!
-                </button>
+                <!-- Tıklama Butonu (Pop-up'lar için gerekli alan) -->
+                <div id="clickerArea" class="relative w-full h-40">
+                    <button id="clickButton" 
+                            class="w-full h-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-5xl rounded-lg border-b-6 border-blue-800 active:border-b-4 transition-all duration-75">
+                        TIKLA!
+                    </button>
+                </div>
+
 
                 <!-- Rebirth Alanı -->
                 <div class="mt-8 p-4 bg-purple-900 rounded-lg border-2 border-purple-500 text-center">
                     <h3 class="text-2xl font-bold text-purple-300 mb-2">Yeniden Doğuş (Rebirth)</h3>
                     <p class="text-sm text-gray-300 mb-3">Tüm ilerlemenizi sıfırlayın, ancak kalıcı bir çarpan ve RBP kazanın. (Gereksinim: 100 Net SBK)</p>
-                    <button id="rebirthButton" onclick="performRebirth()"
+                    <button id="rebirthButton" 
                             class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-full shadow-lg transition duration-150">
                         YENİDEN DOĞ
                     </button>
@@ -134,6 +165,36 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 4. Online Yarışma Görünümü (YENİ) -->
+        <div id="competitionView" class="view-container hidden">
+            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-red-500">
+                <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">CANLI TIKLAMA DÜELLOSU (1v1)</h2>
+                
+                <!-- Geri Sayım Sayacı -->
+                <div id="timerDisplay" class="p-4 mb-4 bg-red-900 rounded-lg text-center font-extrabold text-4xl border-2 border-red-500">
+                    Süre: Hazır
+                </div>
+
+                <!-- Yarışma Tıklama Alanı -->
+                <div id="competitionClickerArea" class="relative w-full h-40">
+                    <button id="competitionButton"
+                            class="w-full h-full bg-green-600 hover:bg-green-700 text-white font-extrabold text-3xl rounded-lg transition-all duration-75">
+                        YARIŞMAYA BAŞLA
+                    </button>
+                </div>
+
+                <div id="myScoreDisplay" class="mt-4 p-3 bg-red-900 rounded-lg text-center font-bold text-xl border border-red-500">
+                    Sizin Tıklamanız: 0
+                </div>
+                
+                <h3 class="text-xl font-bold text-red-300 mt-6 mb-3 text-center">Liderlik Tablosu</h3>
+                <div id="leaderboard" class="space-y-2 bg-gray-800 p-4 rounded-lg">
+                    <p class="text-center text-gray-400">Liderlik Tablosu Yükleniyor...</p>
+                </div>
+                
+            </div>
+        </div>
 
 
         <!-- Mesaj Kutusu -->
@@ -141,29 +202,57 @@
             Yeterli paranız yok!
         </div>
 
+        <!-- Kullanıcı Kimliği Bilgisi (Firestore gereği zorunlu) -->
+        <div class="mt-6 p-2 text-xs text-gray-500 text-center bg-gray-900 rounded-lg">
+            Kullanıcı Kimliğiniz (Diğer oyuncular için): <span id="currentUserId" class="font-mono text-gray-300 break-all">Yükleniyor...</span>
+        </div>
+
     </div>
 
-    <!-- JavaScript Oyun Mantığı -->
-    <script>
-        // Oyun Durumu (State)
-        let coins = 0;             // Toplam para
-        let baseClickValue = 1;    // Tıklama başına temel kazanç (çarpan hariç)
-        let basePassiveRate = 0;   // Saniye başına temel pasif kazanç (çarpan hariç)
-        let rebirths = 0;          // Yeniden doğuş sayısı
-        let rebirthMultiplier = 1; // Yeniden doğuş ile gelen kalıcı çarpan
-        let passiveMultiplier = 1; // Marketten alınan pasif gelir çarpanı
-        let rebirthPoints = 0;     // Rebirth Puanı (RBP)
+    <!-- JavaScript Oyun ve Firebase Mantığı -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, updateDoc, increment, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // RBP Mağazası'ndan gelen kalıcı çarpanlar
-        let rbpStartingCoinBonus = 0; // Her Rebirth sonrası başlangıç parası
-        let rbpPassiveSpeedBonus = 1; // Pasif hız çarpanı (daha küçük süreye böleceğiz)
-        let rbpAutoclickerLevel = 0;  // Otomatik tıklama seviyesi
+        // Firestore Ayarları ve Değişkenleri
+        let db;
+        let auth;
+        let userId = null;
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-clicker-app';
+        const FIREBASE_CONFIG = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const INITIAL_AUTH_TOKEN = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firestore Koleksiyon Yolları (Genel Veri - Public)
+        const RACE_SCORES_PATH = `artifacts/${APP_ID}/public/data/race_scores`;
+        const RACE_QUEUE_PATH = `artifacts/${APP_ID}/public/data/race_queue`; // YENİ KUYRUK
         
-        let lastSaveTime = Date.now(); // YENİ: Son kaydetme zamanı (Çevrimdışı kazanç için)
+        // Local Game State
+        let coins = 0;             
+        let baseClickValue = 1;    
+        let basePassiveRate = 0;   
+        let rebirths = 0;          
+        let rebirthMultiplier = 1; 
+        let passiveMultiplier = 1; 
+        let rebirthPoints = 0;     
+        let rbpStartingCoinBonus = 0; 
+        let rbpPassiveSpeedBonus = 1; 
+        let rbpAutoclickerLevel = 0;  
+        let lastSaveTime = Date.now();
+        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60;
 
-        // Sabitler
-        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60; // Maksimum 8 saat çevrimdışı kazanç
-
+        // Firebase Yarışma Durumu (YENİ EKLEMELER)
+        let competitionActive = false;
+        let competitionStartTime = 0;
+        let competitionTimer = null;
+        const COMPETITION_DURATION_SECONDS = 45; // 45 Saniye
+        let currentRaceClicks = 0; // Bu yarışmada kullanıcının yaptığı tıklama sayısı
+        
+        // Eşleştirme Durumları
+        let matchmakingStatus = 'idle'; // 'idle', 'in_queue', 'in_match'
+        let opponentId = null;
+        let randomOpponentDisplayId = null; // 3+ kişi olduğunda rastgele gösterilen rakip
+        
         // HTML Elementleri
         const coinDisplay = document.getElementById('coinDisplay');
         const rebirthDisplay = document.getElementById('rebirthDisplay');
@@ -175,30 +264,38 @@
         const marketItemsContainer = document.getElementById('marketItems');
         const rebirthStoreItemsContainer = document.getElementById('rebirthStoreItems'); 
         const messageBox = document.getElementById('messageBox');
-        
-        // Pazar Öğeleri Verisi (Para ile alınan)
+        const currentUserIdDisplay = document.getElementById('currentUserId');
+        const leaderboardContainer = document.getElementById('leaderboard');
+        const myScoreDisplay = document.getElementById('myScoreDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const competitionButton = document.getElementById('competitionButton');
+        const clickerArea = document.getElementById('clickerArea');
+
+        // Navigasyon Butonları
+        const navClicker = document.getElementById('navClicker');
+        const navMarket = document.getElementById('navMarket');
+        const navRebirthStore = document.getElementById('navRebirthStore');
+        const navCompetition = document.getElementById('navCompetition');
+        const rebirthButton = document.getElementById('rebirthButton'); 
+
+        // Pazar Öğeleri Verisi (Kısaltıldı)
         const MARKET_ITEMS = [
             { id: 1, name: "Gelişmiş Parmak", cost: 10, initialCost: 10, multiplier: 1.5, type: 'click', value: 1, level: 0, maxLevel: 50, description: "Tıklama başına kazancı 1 artırır." },
             { id: 2, name: "Otomatik Tıklayıcı", cost: 100, initialCost: 100, multiplier: 1.15, type: 'passive', value: 1, level: 0, maxLevel: 100, description: "Saniye başına 1 pasif gelir sağlar." },
-            { id: 3, name: "Küçük Madenci", cost: 500, initialCost: 500, multiplier: 1.2, type: 'passive', value: 5, level: 0, maxLevel: 25, description: "Saniye başına 5 pasif gelir sağlar." },
-            { id: 4, name: "İş Merkezi", cost: 5000, initialCost: 5000, multiplier: 1.3, type: 'passive', value: 50, level: 0, maxLevel: 10, description: "Saniye başına 50 pasif gelir sağlar." },
-            { id: 5, name: "Pasif Çarpan Kartı", cost: 20000, initialCost: 20000, multiplier: 3.0, type: 'multiplier', value: 2, level: 0, maxLevel: 5, description: "Pasif gelirinizi (SBK) 2 katına çıkarır." }
+            { id: 4, name: "İş Merkezi", cost: 5000, initialCost: 5000, multiplier: 1.3, type: 'passive', value: 50, level: 0, maxLevel: 10, description: "Saniye başına 50 pasif gelir sağlar." }
         ];
 
-        // RBP Mağazası Öğeleri Verisi (RBP ile alınan - Kalıcı)
+        // RBP Mağazası Öğeleri Verisi (Kısaltıldı)
         const REBIRTH_ITEMS = [
             { id: 101, name: "Başlangıç Parası", cost: 5, initialCost: 5, multiplier: 1.5, type: 'starting_coin', value: 10, level: 0, maxLevel: 10, description: "Her Rebirth sonrası 10 fazladan para ile başlar." },
-            { id: 102, name: "Pasif Hızlandırıcı", cost: 25, initialCost: 25, multiplier: 2.0, type: 'passive_speed', value: 0.1, level: 0, maxLevel: 5, description: "Pasif gelirin saniye tik süresini kalıcı olarak %10 azaltır." },
             { id: 103, name: "Otomatik Tıklama", cost: 50, initialCost: 50, multiplier: 2.5, type: 'autoclick', value: 1, level: 0, maxLevel: 10, description: "Saniyede 1 Otomatik Tıklama ekler. (Kalıcı)" }
         ];
 
+
         // ------------------------------------------------------------------
-        // YARDIMCI FONKSİYONLAR
+        // YARDIMCI VE UI FONKSİYONLARI
         // ------------------------------------------------------------------
 
-        /**
-         * Bir sayıyı okunabilir formatta gösterir (Örn: 123456 -> 123.456).
-         */
         function formatNumber(num) {
             if (num >= 1000000) {
                 return (num / 1000000).toFixed(2) + " M";
@@ -206,45 +303,26 @@
             return Math.floor(num).toLocaleString('tr-TR');
         }
         
-        /**
-         * alert() yerine kullanılan basit mesaj kutusu.
-         */
         function showMessage(message, type = 'error') {
             messageBox.textContent = message;
-            messageBox.className = messageBox.className.replace(/\sbg-(red|green|purple)-\d+/g, '');
+            messageBox.className = messageBox.className.replace(/\sbg-(red|green|purple|blue|gray)-\d+/g, '');
             
-            if (type === 'error') {
-                messageBox.classList.add('bg-red-600');
-            } else if (type === 'success') {
-                messageBox.classList.add('bg-green-600');
-            } else if (type === 'info') {
-                messageBox.classList.add('bg-purple-600');
-            } else if (type === 'offline') {
-                messageBox.classList.add('bg-blue-600');
-            }
-
+            if (type === 'error') messageBox.classList.add('bg-red-600');
+            else if (type === 'success') messageBox.classList.add('bg-green-600');
+            else if (type === 'info') messageBox.classList.add('bg-purple-600');
+            else if (type === 'offline') messageBox.classList.add('bg-blue-600');
+            
             messageBox.classList.remove('hidden');
             setTimeout(() => {
                 messageBox.classList.add('hidden');
             }, 3000); 
         }
 
-        // ------------------------------------------------------------------
-        // GÖRÜNÜM VE NAVİGASYON
-        // ------------------------------------------------------------------
-
-        /**
-         * Görünümler (Tıklama Merkezi / Market) arasında geçiş yapar.
-         */
         function switchView(viewId) {
             document.querySelectorAll('.view-container').forEach(view => {
                 view.classList.add('hidden');
             });
-            
-            const targetView = document.getElementById(viewId);
-            if (targetView) {
-                targetView.classList.remove('hidden');
-            }
+            document.getElementById(viewId)?.classList.remove('hidden');
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -252,154 +330,524 @@
 
             const navBase = viewId.replace('View', '');
             const navId = 'nav' + navBase.charAt(0).toUpperCase() + navBase.slice(1);
+            document.getElementById(navId)?.classList.add('active');
             
-            const navButton = document.getElementById(navId);
-
-            if (navButton) {
-                navButton.classList.add('active');
+            if (viewId === 'marketView') renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
+            if (viewId === 'rebirthStoreView') renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
+            if (viewId === 'competitionView') {
+                // Yarışma görünümüne geçildiğinde kuyruğa katıl
+                joinQueue();
             } else {
-                console.error(`Gezinme düğmesi bulunamadı: ${navId}`);
+                // Diğer görünümlere geçildiğinde kuyruktan çık
+                leaveQueue();
+                endCompetition(true); // Gerekirse yarışmayı durdur
+            }
+        }
+        
+        // ------------------------------------------------------------------
+        // FIREBASE İŞLEMLERİ
+        // ------------------------------------------------------------------
+
+        async function initializeFirebase() {
+            if (Object.keys(FIREBASE_CONFIG).length === 0) {
+                console.error("Firebase yapılandırması eksik. Çevrimiçi özellikler devre dışı.");
+                currentUserIdDisplay.textContent = "Çevrimdışı Mod";
+                return;
             }
             
-            // Market'e geçildiğinde kartları güncel olarak yeniden çiz
-            if (viewId === 'marketView') {
-                renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
-            }
-            // RBP Mağazasına geçildiğinde kartları güncel olarak yeniden çiz
-            if (viewId === 'rebirthStoreView') {
-                renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
+            try {
+                const app = initializeApp(FIREBASE_CONFIG);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (INITIAL_AUTH_TOKEN) {
+                    await signInWithCustomToken(auth, INITIAL_AUTH_TOKEN);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        currentUserIdDisplay.textContent = userId;
+                        loadCompetitionScore();
+                        startLeaderboardListener();
+                        startMatchmakingListener(); // Eşleştirme dinleyicisini başlat
+                    } else {
+                        userId = null;
+                        currentUserIdDisplay.textContent = "Giriş Yapılmadı";
+                    }
+                });
+                
+            } catch (error) {
+                console.error("Firebase başlatılırken hata oluştu:", error);
+                currentUserIdDisplay.textContent = "Hata!";
             }
         }
 
+        // --- Yarışma Skoru Yönetimi ---
+
+        async function loadCompetitionScore() {
+             if (!userId || !db) return;
+             const userRaceDocRef = doc(db, RACE_SCORES_PATH, userId);
+             try {
+                // Skoru 0 ile başlat
+                await setDoc(userRaceDocRef, {
+                    userId: userId,
+                    clicks: 0,
+                    lastUpdate: Date.now()
+                }, { merge: true });
+                currentRaceClicks = 0; 
+                updateCompetitionDisplay();
+             } catch (error) {
+                console.error("Yarışma skoru yüklenirken/ayarlanırken hata oluştu:", error);
+             }
+        }
+        
+        async function updateCompetitionScore() {
+            if (!userId || !db || !competitionActive) return;
+
+            const userRaceDocRef = doc(db, RACE_SCORES_PATH, userId);
+
+            try {
+                // Tıklama sayısını 1 artır
+                await updateDoc(userRaceDocRef, {
+                    clicks: increment(1),
+                    lastUpdate: Date.now()
+                });
+            } catch (error) {
+                console.error("Yarışma skoru güncellenirken hata oluştu:", error);
+            }
+        }
+        
+        // --- Liderlik Tablosu Dinleyicisi ---
+
+        function startLeaderboardListener() {
+            if (!db) return;
+            const q = collection(db, RACE_SCORES_PATH); 
+            
+            onSnapshot(q, (snapshot) => {
+                let scores = [];
+                snapshot.forEach((doc) => {
+                    scores.push(doc.data());
+                });
+                
+                scores.sort((a, b) => b.clicks - a.clicks); 
+                renderLeaderboard(scores);
+            }, (error) => {
+                console.error("Liderlik tablosu dinlenirken hata:", error);
+                leaderboardContainer.innerHTML = `<p class="text-center text-red-400">Hata: Liderlik tablosu yüklenemedi.</p>`;
+            });
+        }
+        
+        function renderLeaderboard(scores) {
+            leaderboardContainer.innerHTML = '';
+            
+            let myRank = -1;
+            let myClicks = 0;
+
+            scores.forEach((score, index) => {
+                const rank = index + 1;
+                const isMe = score.userId === userId;
+                
+                if (isMe) {
+                    myRank = rank;
+                    myClicks = score.clicks;
+                    currentRaceClicks = score.clicks; 
+                }
+
+                const opponentName = score.userId === opponentId ? 'RAKİBİNİZ' : isMe ? 'SİZ' : score.userId.substring(0, 8) + '...';
+                const rankColor = rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-300' : rank === 3 ? 'text-orange-400' : 'text-white';
+                const bgColor = isMe ? 'bg-red-700 border-red-400' : score.userId === opponentId ? 'bg-purple-700 border-purple-400' : 'bg-gray-600 border-gray-700';
+
+                const itemHtml = `
+                    <div class="p-3 flex items-center justify-between rounded-lg font-mono border ${bgColor}">
+                        <span class="font-bold ${rankColor}">${rank}.</span>
+                        <span class="truncate ml-4 flex-1 text-sm">${opponentName}</span>
+                        <span class="text-lg font-extrabold text-right">${formatNumber(score.clicks)} Tık</span>
+                    </div>
+                `;
+                leaderboardContainer.innerHTML += itemHtml;
+            });
+            
+            updateCompetitionDisplay(myRank, myClicks);
+        }
+
+        // --- Eşleştirme Kuyruğu Yönetimi ---
+        
+        async function joinQueue() {
+            if (!userId || !db || matchmakingStatus !== 'idle') return;
+            matchmakingStatus = 'in_queue';
+            
+            const userQueueDocRef = doc(db, RACE_QUEUE_PATH, userId);
+            try {
+                await setDoc(userQueueDocRef, {
+                    userId: userId,
+                    status: 'in_queue',
+                    timestamp: Date.now(),
+                    opponentId: null 
+                });
+                showMessage("Eşleştirme kuyruğuna katıldınız. Rakip bekleniyor...", 'info');
+                updateCompetitionUI(); 
+            } catch (error) {
+                console.error("Kuyruğa katılırken hata:", error);
+                matchmakingStatus = 'idle';
+            }
+        }
+        
+        async function leaveQueue() {
+            if (!userId || !db || matchmakingStatus === 'idle') return;
+            matchmakingStatus = 'idle';
+            opponentId = null;
+            
+            const userQueueDocRef = doc(db, RACE_QUEUE_PATH, userId);
+            try {
+                await deleteDoc(userQueueDocRef);
+            } catch (error) {
+                 console.warn("Kuyruktan çıkarken (doc silinirken) hata:", error);
+            }
+            updateCompetitionUI();
+        }
+
+        function startMatchmakingListener() {
+            if (!db) return;
+            const q = collection(db, RACE_QUEUE_PATH); 
+            
+            onSnapshot(q, (snapshot) => {
+                if (document.getElementById('competitionView').classList.contains('hidden')) {
+                    // Kullanıcı Yarışma Görünümünde değilse, dinle ama işlem yapma
+                    return; 
+                }
+                
+                let queueUsers = [];
+                let myQueueDoc = null;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.userId === userId) {
+                        myQueueDoc = data;
+                    } else {
+                        queueUsers.push(data);
+                    }
+                });
+
+                checkMatchmaking(myQueueDoc, queueUsers);
+                updateCompetitionUI(queueUsers);
+
+            }, (error) => {
+                console.error("Eşleştirme dinlenirken hata:", error);
+            });
+        }
+        
+        async function checkMatchmaking(myQueueDoc, queueUsers) {
+            if (!userId) return;
+
+            // 1. Durum: Eşleşmede miyim? (Rakip tarafından ayarlandı veya ben ayarladım)
+            if (myQueueDoc && myQueueDoc.status === 'in_match' && myQueueDoc.opponentId) {
+                matchmakingStatus = 'in_match';
+                opponentId = myQueueDoc.opponentId;
+                if (!competitionActive) {
+                    startCompetition(opponentId); 
+                }
+                return;
+            }
+            
+            // 2. Durum: Kuyrukta mıyım? (Eşleşme arıyorum)
+            if (myQueueDoc && myQueueDoc.status === 'in_queue') {
+                matchmakingStatus = 'in_queue';
+                
+                // Müsait olan rakipler
+                const availableOpponents = queueUsers.filter(u => u.status === 'in_queue');
+                
+                // 3+ Kişi Kuralı: Toplam aktif kullanıcı sayısı 3 veya daha fazlaysa
+                if (queueUsers.length >= 2) { 
+                    // 3+ aktif kişi var. Rastgele birini rakip gibi göster ve bekleme durumunu koru.
+                    const allActiveIds = queueUsers.map(u => u.userId);
+                    randomOpponentDisplayId = allActiveIds[Math.floor(Math.random() * allActiveIds.length)];
+                } else {
+                    randomOpponentDisplayId = null;
+                }
+                
+                // Eşleştirme Girişimi (Client-Side Race)
+                if (availableOpponents.length > 0) {
+                     // Kuyruktaki en eski benim miyim? Ben başlatmalıyım.
+                     const allQueue = [...availableOpponents, myQueueDoc].sort((a, b) => a.timestamp - b.timestamp);
+                     
+                     if (allQueue.length >= 2 && allQueue[0].userId === userId) {
+                        // Ben en eskiyim ve bir rakip var. Eşleşmeyi başlatıyorum.
+                        const potentialOpponentId = allQueue[1].userId;
+                        await initiateMatch(potentialOpponentId);
+                        return;
+                     }
+                }
+            }
+            
+            // 3. Durum: Boşta
+            if (!myQueueDoc) {
+                matchmakingStatus = 'idle';
+            }
+        }
+        
+        async function initiateMatch(potentialOpponentId) {
+             if (!userId || !db) return;
+             
+             // Bir transaction içinde her iki kullanıcının kuyruk durumunu atomik olarak güncelle
+             const myRef = doc(db, RACE_QUEUE_PATH, userId);
+             const opponentRef = doc(db, RACE_QUEUE_PATH, potentialOpponentId);
+             
+             try {
+                await runTransaction(db, async (transaction) => {
+                    const myDoc = await transaction.get(myRef);
+                    const opponentDoc = await transaction.get(opponentRef);
+
+                    // Eşleşmeyi sadece ikisi de 'in_queue' ise başlat
+                    if (myDoc.data().status === 'in_queue' && opponentDoc.data().status === 'in_queue') {
+                        transaction.update(myRef, { status: 'in_match', opponentId: potentialOpponentId, matchStart: Date.now() });
+                        transaction.update(opponentRef, { status: 'in_match', opponentId: userId, matchStart: Date.now() });
+                        
+                        // Local state'i güncelle
+                        matchmakingStatus = 'in_match';
+                        opponentId = potentialOpponentId;
+                        startCompetition(opponentId);
+                        showMessage(`Eşleşme bulundu! Rakibiniz: ${opponentId.substring(0, 8)}...`, 'success');
+                    } else {
+                        // Birisi çoktan eşleşme buldu veya kuyruktan çıktı.
+                        throw "Eşleşme koşulları ihlal edildi, yeniden denenecek.";
+                    }
+                });
+            } catch (e) {
+                console.log("Eşleşme başlatma yarışı kaybedildi veya hata oluştu:", e);
+                // Yarış kaybedildiyse, dinleyici yeni durumu alacak ve UI güncellenecek.
+            }
+        }
+
+        // --- Yarışma UI Güncelleme ---
+
+        function updateCompetitionUI(queueUsers = []) {
+            if (matchmakingStatus === 'idle') {
+                timerDisplay.textContent = `Süre: Hazır`;
+                competitionButton.textContent = "YARIŞMAYA BAŞLA";
+                competitionButton.disabled = false;
+                competitionButton.classList.replace('bg-red-600', 'bg-green-600');
+                competitionButton.classList.add('hover:bg-green-700');
+            } else if (matchmakingStatus === 'in_queue') {
+                competitionActive = false;
+                competitionButton.disabled = true;
+                competitionButton.classList.replace('bg-green-600', 'bg-gray-600');
+                competitionButton.classList.remove('hover:bg-green-700');
+                
+                if (randomOpponentDisplayId) {
+                    // 3+ Kişi Kuralı: Oyuncu Bekleniyor
+                    timerDisplay.textContent = `Oyuncu Bekleniyor (Rakip: ${randomOpponentDisplayId.substring(0, 8)}...)`;
+                    competitionButton.textContent = `Eşleşme Aranıyor... (${queueUsers.length + 1} Kişi Kuyrukta)`;
+                } else {
+                    // 2 Kişi Aranıyor
+                    timerDisplay.textContent = `Eşleşme Aranıyor...`;
+                    competitionButton.textContent = "Lütfen Bekleyiniz...";
+                }
+                
+            } else if (matchmakingStatus === 'in_match') {
+                // Eşleşme aktif, buton tıklamaya hazır
+                competitionButton.disabled = false;
+                competitionButton.textContent = `TIKLA! Rakip: ${opponentId.substring(0, 8)}...`;
+                competitionButton.classList.replace('bg-green-600', 'bg-red-600');
+                competitionButton.classList.add('hover:bg-red-700');
+                // Timer, startCompetition içinde yönetiliyor
+            }
+        }
+        
+        function updateCompetitionDisplay(rank = -1, clicks = currentRaceClicks) {
+            const rankText = rank > 0 ? ` (#${rank})` : '';
+            myScoreDisplay.textContent = `Sizin Tıklamanız: ${formatNumber(clicks)} ${rankText}`;
+        }
+        
         // ------------------------------------------------------------------
-        // OYUN MANTIK VE DÖNGÜSÜ
+        // YENİ: GÖRSEL GERİ BİLDİRİM (POP-UP)
         // ------------------------------------------------------------------
         
+        function createClickPopup(amount, x, y) {
+            const popup = document.createElement('span');
+            popup.textContent = `+${formatNumber(amount)}`;
+            popup.classList.add('click-popup');
+            
+            const rect = clickButton.getBoundingClientRect();
+            const posX = x - rect.left - (rect.width / 2) + Math.random() * 80 - 40;
+            const posY = y - rect.top - (rect.height / 2) + Math.random() * 60 - 30;
+            
+            popup.style.left = `${posX}px`;
+            popup.style.top = `${posY}px`;
+            
+            clickerArea.appendChild(popup);
+
+            popup.addEventListener('animationend', () => {
+                popup.remove();
+            });
+        }
+        
+        // ------------------------------------------------------------------
+        // YENİ: YARIŞMA MANTIK
+        // ------------------------------------------------------------------
+
         /**
-         * Oyuncunun parasına tıklama kazancını ekler.
+         * Yarışmanın süresini takip eden geri sayım sayacı
          */
-        function handleManualClick() {
-            const actualClick = baseClickValue * rebirthMultiplier;
-            coins += actualClick;
-            updateDisplay();
-            saveGame(); // Her tıklamada kaydetmek yerine, 5 saniyelik autosave'e güvenebiliriz.
+        function startCompetitionTimer() {
+            if (competitionTimer) clearInterval(competitionTimer);
+            competitionStartTime = Date.now();
+            
+            competitionTimer = setInterval(() => {
+                const elapsedTime = Math.floor((Date.now() - competitionStartTime) / 1000);
+                const remainingTime = COMPETITION_DURATION_SECONDS - elapsedTime;
+
+                if (remainingTime <= 0) {
+                    endCompetition();
+                } else {
+                    timerDisplay.textContent = `Süre: ${remainingTime} saniye`;
+                }
+            }, 1000);
         }
 
         /**
-         * Saniye başına kazanç ekler (Pasif Gelir).
+         * Yarışmayı başlatır ve sayaç ile butonu ayarlar.
          */
+        function startCompetition(opponentId) {
+            competitionActive = true;
+            
+            // Skoru sıfırla (Firestore listener zaten bunu yapmalı, ama emin olmak için)
+            if (userId && db) {
+                const userRaceDocRef = doc(db, RACE_SCORES_PATH, userId);
+                setDoc(userRaceDocRef, { clicks: 0 }, { merge: true }).catch(e => console.error("Skor sıfırlanamadı:", e));
+            }
+
+            competitionButton.textContent = `TIKLA! Rakip: ${opponentId.substring(0, 8)}...`;
+            competitionButton.disabled = false;
+            competitionButton.classList.replace('bg-green-600', 'bg-red-600');
+            competitionButton.classList.add('hover:bg-red-700');
+            
+            startCompetitionTimer();
+            showMessage(`DÜELLO BAŞLADI! Rakibiniz: ${opponentId.substring(0, 8)}... Tıklamaya başlayın!`, 'success');
+        }
+
+        /**
+         * Yarışmayı bitirir ve butonu kilitler.
+         */
+        async function endCompetition(isLeaving = false) {
+            if (!competitionActive && !isLeaving) return; // Zaten bitmişse veya sadece görünümden ayrılıyorsa
+
+            competitionActive = false;
+            clearInterval(competitionTimer);
+            competitionTimer = null;
+            
+            // Kuyruk durumunu sıfırla (Maç bitti)
+            await leaveQueue(); 
+            
+            if (!isLeaving) {
+                timerDisplay.textContent = `Süre: BİTTİ!`;
+                competitionButton.textContent = "TEKRAR BAŞLA";
+                competitionButton.disabled = false;
+                competitionButton.classList.replace('bg-red-600', 'bg-green-600');
+                competitionButton.classList.add('hover:bg-green-700');
+                showMessage("Yarışma Sona Erdi! Sonuçlar Liderlik Tablosunda.", 'info');
+            } else {
+                updateCompetitionUI(); // Görünümden ayrılma durumunda UI'ı temizle
+            }
+        }
+
+        /**
+         * Yarışma butonuna tıklama işleyicisi.
+         */
+        function handleCompetitionClick() {
+            if (matchmakingStatus === 'idle') {
+                // Eğer boşta ise, kuyruğa katıl
+                joinQueue();
+            } else if (matchmakingStatus === 'in_match' && competitionActive) {
+                // Eğer yarışma aktif ise, tıklamayı kaydet
+                updateCompetitionScore();
+            } else if (matchmakingStatus === 'in_match' && !competitionActive) {
+                // Maç bitti ve tekrar başlatmak istiyor
+                 endCompetition(true); // Önceki match state'i temizle
+                 joinQueue();
+            }
+        }
+        
+        // ------------------------------------------------------------------
+        // OYUN MANTIK VE DÖNGÜSÜ (Normal Clicker)
+        // ------------------------------------------------------------------
+        
+        function handleManualClick(e) {
+            const actualClick = baseClickValue * rebirthMultiplier;
+            coins += actualClick;
+            
+            if (e) {
+                const rect = clickButton.getBoundingClientRect();
+                const x = e.clientX - rect.left - (rect.width / 2) + Math.random() * 80 - 40;
+                const y = e.clientY - rect.top - (rect.height / 2) + Math.random() * 60 - 30;
+                
+                createClickPopup(actualClick, x, y);
+            }
+            
+            updateDisplay();
+        }
+
         function handlePassiveIncome() {
             if (basePassiveRate > 0) {
-                // Gerçek pasif kazanç = (Temel Pasif Oranı) * (Rebirth Çarpanı) * (Market Çarpanı)
                 const actualPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier;
                 coins += actualPassive;
                 updateDisplay();
             }
         }
 
-        /**
-         * Oyun durumunu (Para, TBK, SBK) ekranda günceller.
-         */
         function updateDisplay() {
-            // Hesaplanan Net Değerler
             const netClick = baseClickValue * rebirthMultiplier;
             const netPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier;
 
-            // Display null checkleri
             if (coinDisplay) coinDisplay.textContent = formatNumber(coins);
             if (rebirthDisplay) rebirthDisplay.textContent = formatNumber(rebirths);
             if (rbpDisplay) rbpDisplay.textContent = formatNumber(rebirthPoints); 
-            
-            // Çarpanı da göstererek TBK/SBK'yı güncelle
             if (clickValueDisplay) clickValueDisplay.textContent = `${formatNumber(netClick)} (x${rebirthMultiplier.toFixed(2)})`; 
             if (passiveRateDisplay) passiveRateDisplay.textContent = `${formatNumber(netPassive)} (x${(rebirthMultiplier * passiveMultiplier).toFixed(2)})`; 
-            
-            // Autoclicker Hızını Güncelle
             if (autoclickerDisplay) autoclickerDisplay.textContent = `${rbpAutoclickerLevel} / sn`;
 
-            // Rebirth düğmesinin durumunu kontrol et
-            const rebirthBtn = document.getElementById('rebirthButton');
             const requiredPassiveRate = 100;
-            if (rebirthBtn) { 
-                 if (netPassive >= requiredPassiveRate) {
-                     rebirthBtn.classList.replace('bg-indigo-600', 'bg-purple-600');
-                     rebirthBtn.classList.add('hover:bg-purple-700');
-                     rebirthBtn.disabled = false;
+            if (rebirthButton) { 
+                 const canRebirth = netPassive >= requiredPassiveRate;
+                 if (canRebirth) {
+                     rebirthButton.classList.replace('bg-indigo-600', 'bg-purple-600');
+                     rebirthButton.classList.add('hover:bg-purple-700');
+                     rebirthButton.disabled = false;
                 } else {
-                     rebirthBtn.classList.replace('bg-purple-600', 'bg-indigo-600');
-                     rebirthBtn.classList.remove('hover:bg-purple-700');
-                     rebirthBtn.disabled = true;
+                     rebirthButton.classList.replace('bg-purple-600', 'bg-indigo-600');
+                     rebirthButton.classList.remove('hover:bg-purple-700');
+                     rebirthButton.disabled = true;
                 }
             }
         }
-
-        /**
-         * Para ile satın alma işlemini gerçekleştirir.
-         */
+        
         function buyItem(item) {
-            if (item.level >= item.maxLevel) {
-                showMessage(`${item.name} zaten maksimum seviyede!`);
-                return;
-            }
-
-            if (coins >= item.cost) {
-                coins -= item.cost;
-                item.level += 1;
-                
-                // Maliyeti artır (bir sonraki seviye için)
-                item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
-                
-                // Etkileri güncelle
-                if (item.type === 'click') {
-                    baseClickValue += item.value;
-                } else if (item.type === 'passive') {
-                    basePassiveRate += item.value;
-                } else if (item.type === 'multiplier') {
-                    // PassiveMultiplier'ı çarpan öğelerinin seviyelerine göre yeniden hesapla
-                    passiveMultiplier = 1;
-                    MARKET_ITEMS.filter(i => i.type === 'multiplier').forEach(i => {
-                        passiveMultiplier *= Math.pow(i.value, i.level);
-                    });
-                }
-                
-                updateDisplay();
-                renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
-                saveGame();
-            } else {
-                showMessage("Yeterli paranız yok!");
-            }
+             if (item.level >= item.maxLevel) { showMessage(`${item.name} zaten maksimum seviyede!`); return; }
+             if (coins >= item.cost) {
+                 coins -= item.cost;
+                 item.level += 1;
+                 item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
+                 if (item.type === 'click') baseClickValue += item.value;
+                 else if (item.type === 'passive') basePassiveRate += item.value;
+                 
+                 updateDisplay();
+                 renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
+                 saveGame();
+             } else { showMessage("Yeterli paranız yok!"); }
         }
 
-        /**
-         * RBP ile satın alma işlemini gerçekleştirir.
-         */
         function buyRebirthItem(item) {
-            if (item.level >= item.maxLevel) {
-                showMessage(`${item.name} zaten maksimum seviyede!`, 'info');
-                return;
-            }
-
+            if (item.level >= item.maxLevel) { showMessage(`${item.name} zaten maksimum seviyede!`, 'info'); return; }
             if (rebirthPoints >= item.cost) {
                 rebirthPoints -= item.cost;
                 item.level += 1;
-                
-                // Maliyeti artır (bir sonraki seviye için)
                 item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
                 
-                // Kalıcı etkileri güncelle
-                if (item.type === 'starting_coin') {
-                    rbpStartingCoinBonus += item.value;
-                } else if (item.type === 'passive_speed') {
-                    rbpPassiveSpeedBonus = 1; 
-                    REBIRTH_ITEMS.filter(i => i.type === 'passive_speed').forEach(i => {
-                        rbpPassiveSpeedBonus *= (1 - (i.value * i.level)); 
-                    });
-                    // Passive Income döngüsünü yeniden başlat (hız değiştiği için)
-                    clearInterval(window.passiveInterval);
-                    startPassiveIncomeLoop();
-                } else if (item.type === 'autoclick') { 
+                if (item.type === 'starting_coin') rbpStartingCoinBonus += item.value;
+                else if (item.type === 'autoclick') { 
                     rbpAutoclickerLevel += item.value;
-                    // Autoclicker döngüsünü yeniden başlat (seviye değiştiği için)
                     clearInterval(window.autoclickerInterval);
                     startAutoclickerLoop();
                 }
@@ -407,45 +855,25 @@
                 updateDisplay();
                 renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
                 saveGame();
-            } else {
-                showMessage("Yeterli RBP'niz yok!", 'error');
-            }
+            } else { showMessage("Yeterli RBP'niz yok!", 'error'); }
         }
 
-
-        /**
-         * Yeniden Doğuş (Rebirth) işlemini gerçekleştirir.
-         */
         function performRebirth() {
-            const requiredPassiveRate = 100;
             const netPassive = basePassiveRate * rebirthMultiplier * passiveMultiplier; 
-
-            if (netPassive < requiredPassiveRate) {
-                showMessage(`Yeniden Doğmak için en az ${requiredPassiveRate} Net SBK oranına ulaşmalısınız!`, 'error');
-                return;
-            }
+            if (netPassive < 100) { showMessage(`Yeniden Doğmak için en az 100 Net SBK oranına ulaşmalısınız!`, 'error'); return; }
             
-            // 1. Rebirth Puanı Hesaplama
             const rbpGained = Math.floor(netPassive / 100); 
             rebirthPoints += rbpGained;
-
-            // 2. Rebirth Artışı ve Çarpan Hesaplama
             rebirths += 1;
             rebirthMultiplier = 1 + (rebirths * 0.20); 
 
-            // 3. Sıfırlama
-            coins = rbpStartingCoinBonus; // RBP ile alınan başlangıç parası bonusu
+            coins = rbpStartingCoinBonus; 
             baseClickValue = 1;
             basePassiveRate = 0;
             passiveMultiplier = 1; 
 
-            // Item seviyelerini ve maliyetlerini sıfırla
-            MARKET_ITEMS.forEach(item => {
-                item.level = 0;
-                item.cost = item.initialCost;
-            });
+            MARKET_ITEMS.forEach(item => { item.level = 0; item.cost = item.initialCost; });
 
-            // 4. Güncelleme
             showMessage(`Yeniden Doğuş Başarılı! Kazanılan RBP: ${rbpGained}. Kalıcı Çarpanınız: x${rebirthMultiplier.toFixed(2)}`, 'success');
             updateDisplay();
             renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
@@ -453,10 +881,6 @@
             saveGame();
         }
 
-
-        /**
-         * Market öğelerini DOM'a (ekrana) çizer.
-         */
         function renderMarket(items, container, buyFunction, currency, currencySymbol) {
             if (!container) return; 
             container.innerHTML = '';
@@ -465,10 +889,7 @@
                 const isAffordable = currency >= item.cost;
                 const isMaxLevel = item.level >= item.maxLevel;
                 
-                let colorClass = 'text-green-400';
-                if (item.type === 'passive') colorClass = 'text-red-400';
-                if (item.type === 'multiplier') colorClass = 'text-blue-400';
-                if (item.type === 'starting_coin' || item.type === 'passive_speed' || item.type === 'autoclick') colorClass = 'text-purple-400';
+                let colorClass = currencySymbol === '💰' ? 'text-yellow-400' : 'text-purple-400';
 
                 const cardHtml = `
                     <div id="item-${item.id}" class="p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between transition duration-200 ${isMaxLevel ? 'bg-gray-600 opacity-50' : isAffordable ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-700 opacity-70 cursor-not-allowed'}">
@@ -488,7 +909,6 @@
                 container.innerHTML += cardHtml;
             });
             
-            // Yeni butonlara olay dinleyicisi ekle
             document.querySelectorAll(`#${container.id} .buy-btn`).forEach(button => {
                 if (!button.disabled) {
                     button.addEventListener('click', (e) => {
@@ -507,77 +927,44 @@
                 }
             });
         }
-
-        // ------------------------------------------------------------------
-        // PERİYODİK DÖNGÜLER
-        // ------------------------------------------------------------------
         
-        /**
-         * Pasif Gelir (SBK) döngüsünü ayarlar. (Hız bonusuna göre ayarlanır)
-         */
         function startPassiveIncomeLoop() {
-             // Döngü hızını rbpPassiveSpeedBonus'a göre ayarla. (Min 100ms)
-             const intervalMs = Math.max(100, Math.floor(1000 * rbpPassiveSpeedBonus)); 
+             const intervalMs = 1000; 
              if (window.passiveInterval) clearInterval(window.passiveInterval);
              window.passiveInterval = setInterval(handlePassiveIncome, intervalMs);
-             console.log(`Pasif Gelir Döngüsü başlatıldı. Aralık: ${intervalMs}ms`);
         }
         
-        /**
-         * Otomatik Tıklayıcı döngüsünü ayarlar.
-         */
         function startAutoclickerLoop() {
             if (window.autoclickerInterval) clearInterval(window.autoclickerInterval);
-            
             if (rbpAutoclickerLevel > 0) {
-                // Autoclicker her saniye ateşlenir
                 window.autoclickerInterval = setInterval(() => {
-                    // Seviye sayısınca tıklama simüle et
                     for (let i = 0; i < rbpAutoclickerLevel; i++) {
-                        handleManualClick();
+                        handleManualClick(null); 
                     }
                 }, 1000);
-                console.log(`Otomatik Tıklayıcı başlatıldı. Saniyede ${rbpAutoclickerLevel} tıklama.`);
             }
         }
-
 
         // ------------------------------------------------------------------
         // KALICI KAYIT (LOCAL STORAGE)
         // ------------------------------------------------------------------
         
-        /**
-         * Oyun durumunu Local Storage'a kaydeder.
-         * Ayrıca son kaydetme zamanını (lastSaveTime) güncel kaydın bir parçası yapar.
-         */
         function saveGame() {
             const gameState = {
-                coins: coins, 
-                baseClickValue: baseClickValue, 
-                basePassiveRate: basePassiveRate, 
-                rebirths: rebirths, 
-                rebirthMultiplier: rebirthMultiplier, 
-                passiveMultiplier: passiveMultiplier, 
-                rebirthPoints: rebirthPoints,
-                rbpStartingCoinBonus: rbpStartingCoinBonus, 
-                rbpPassiveSpeedBonus: rbpPassiveSpeedBonus, 
-                rbpAutoclickerLevel: rbpAutoclickerLevel,
-                lastSaveTime: Date.now(), // YENİ: Kayıt zamanı
+                coins, baseClickValue, basePassiveRate, rebirths, rebirthMultiplier, passiveMultiplier, rebirthPoints,
+                rbpStartingCoinBonus, rbpPassiveSpeedBonus, rbpAutoclickerLevel,
+                lastSaveTime: Date.now(),
                 marketItems: MARKET_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
                 rebirthStoreItems: REBIRTH_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })), 
             };
             localStorage.setItem('clickerGameSave', JSON.stringify(gameState));
         }
 
-        /**
-         * Oyun durumunu Local Storage'dan yükler ve çevrimdışı kazancı hesaplar.
-         */
         function loadGame() {
             const savedState = localStorage.getItem('clickerGameSave');
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
-                // Temel değişkenleri yükle
                 coins = gameState.coins || 0;
                 baseClickValue = gameState.baseClickValue || 1;
                 basePassiveRate = gameState.basePassiveRate || 0;
@@ -588,23 +975,18 @@
                 rbpStartingCoinBonus = gameState.rbpStartingCoinBonus || 0; 
                 rbpPassiveSpeedBonus = gameState.rbpPassiveSpeedBonus || 1; 
                 rbpAutoclickerLevel = gameState.rbpAutoclickerLevel || 0; 
-                lastSaveTime = gameState.lastSaveTime || Date.now(); // Son kaydetme zamanını yükle
+                lastSaveTime = gameState.lastSaveTime || Date.now(); 
 
-                // Item seviyelerini ve maliyetlerini yükle (Para Market)
                 if (gameState.marketItems) {
                     gameState.marketItems.forEach(savedItem => {
                         const item = MARKET_ITEMS.find(i => i.id === savedItem.id);
                         if (item) {
                             item.level = savedItem.level;
                             item.cost = savedItem.cost;
-                            if(item.type === 'multiplier' && item.level > 0) {
-                                passiveMultiplier *= Math.pow(item.value, item.level); 
-                            }
                         }
                     });
                 }
                 
-                // Item seviyelerini ve maliyetlerini yükle (RBP Mağazası)
                 if (gameState.rebirthStoreItems) {
                     gameState.rebirthStoreItems.forEach(savedItem => {
                         const item = REBIRTH_ITEMS.find(i => i.id === savedItem.id);
@@ -614,15 +996,18 @@
                         }
                     });
                 }
+                
+                 passiveMultiplier = 1;
+                 MARKET_ITEMS.filter(i => i.type === 'multiplier').forEach(i => {
+                    passiveMultiplier *= Math.pow(i.value, i.level);
+                 });
 
-                // ÇEVRİMDIŞI KAZANÇ HESAPLAMASI (YENİ)
+
                 const timePassedMs = Date.now() - lastSaveTime;
                 const timePassedSeconds = Math.floor(timePassedMs / 1000);
                 
-                // Maksimum süreyi uygula
                 const effectiveOfflineTime = Math.min(timePassedSeconds, MAX_OFFLINE_TIME_SECONDS);
                 
-                // Net SBK oranı
                 const netPassiveRate = basePassiveRate * rebirthMultiplier * passiveMultiplier;
                 
                 if (effectiveOfflineTime > 0 && netPassiveRate > 0) {
@@ -644,7 +1029,6 @@
                     showMessage("Oyun Yüklendi!", 'success');
                 }
                 
-                // Kayıt zamanını hemen güncelle
                 lastSaveTime = Date.now();
                 saveGame();
                 
@@ -660,31 +1044,28 @@
         // OYUN BAŞLATMA
         // ------------------------------------------------------------------
 
-        /**
-         * Oyunu başlatır ve olay dinleyicilerini kurar.
-         */
         function initializeGame() {
-            // Kayıt yükle
+            initializeFirebase(); 
             loadGame();
 
-            // Tıklama olayını ata
             if (clickButton) clickButton.addEventListener('click', handleManualClick);
+            if (rebirthButton) rebirthButton.addEventListener('click', performRebirth);
+            if (competitionButton) competitionButton.addEventListener('click', handleCompetitionClick);
             
-            // Pasif gelir döngüsünü başlat
+            if (navClicker) navClicker.addEventListener('click', () => switchView('clickerView'));
+            if (navMarket) navMarket.addEventListener('click', () => switchView('marketView'));
+            if (navRebirthStore) navRebirthStore.addEventListener('click', () => switchView('rebirthStoreView'));
+            if (navCompetition) navCompetition.addEventListener('click', () => switchView('competitionView'));
+
             startPassiveIncomeLoop();
-            
-            // Otomatik Tıklayıcı döngüsünü başlat
             startAutoclickerLoop();
             
-            // Otomatik Kayıt döngüsünü başlat (Her 5 saniyede bir)
             setInterval(saveGame, 5000);
 
-            // İlk gösterimi güncelle ve görünümü ayarla
             updateDisplay();
-            switchView('clickerView'); // Başlangıçta tıklama merkezini göster
+            switchView('clickerView'); 
         }
 
-        // Oyun başladığında başlatma fonksiyonunu çağır
         document.addEventListener('DOMContentLoaded', initializeGame);
         
     </script>
