@@ -78,45 +78,36 @@
 </head>
 <body class="text-white min-h-screen flex items-center justify-center p-4">
 
-    <!-- Ana Oyun Konteyneri -->
     <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
         <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Online Rekabet</h1>
 
-        <!-- Durum Bilgileri (Üst Panel) -->
         <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
-            <!-- Para -->
             <div class="col-span-1">
                 <p class="text-base">💰 Para:</p>
                 <span id="coinDisplay" class="font-bold text-yellow-400 text-3xl block">0</span>
             </div>
-            <!-- Rebirth -->
             <div class="col-span-1">
                 <p class="text-base">🌟 Rebirth:</p>
                 <span id="rebirthDisplay" class="font-bold text-indigo-400 text-3xl block">0</span>
             </div>
-            <!-- RBP -->
             <div class="col-span-1">
                 <p class="text-base text-purple-300">⚛️ RBP (Puan):</p>
                 <span id="rbpDisplay" class="font-semibold text-purple-400 text-2xl block">0</span>
             </div>
-             <!-- SBK (Net) -->
-            <div class="col-span-1">
+             <div class="col-span-1">
                 <p class="text-base text-red-300">⚙️ Pasif (SBK):</p>
                 <span id="passiveRateDisplay" class="font-semibold text-red-400 text-2xl block">0</span>
             </div>
-             <!-- TBK Display -->
-            <div class="col-span-2">
+             <div class="col-span-2">
                 <p class="text-base text-green-300">✨ Tıklama (TBK):</p>
                 <span id="clickValueDisplay" class="font-semibold text-green-400 text-2xl block">1</span>
             </div>
-            <!-- Autoclicker Durumu -->
             <div class="col-span-2 text-center">
                 <p class="text-sm text-gray-400">⚡ Otomatik Tıklama Hızı:</p>
                 <span id="autoclickerDisplay" class="font-semibold text-blue-300 text-xl block">0 / sn</span>
             </div>
         </div>
 
-        <!-- Gezinme (Navigation) -->
         <nav class="flex justify-center flex-wrap gap-4 mb-6">
             <button id="navClicker" class="nav-btn active px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold transition duration-150">Tıklama Merkezi</button>
             <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150">Pazar (Para)</button>
@@ -125,14 +116,10 @@
             <button id="navCompetition" class="nav-btn px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-bold transition duration-150">💥 Online Yarışma</button>
         </nav>
 
-        <!-- Görünüm Konteynerleri -->
-        
-        <!-- 1. Tıklama Merkezi Görünümü -->
         <div id="clickerView" class="view-container">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-blue-500">
                 <h2 class="text-3xl font-bold mb-6 text-blue-300 text-center">Tıkla ve Kazan!</h2>
                 
-                <!-- Tıklama Butonu (Pop-up'lar için gerekli alan) -->
                 <div id="clickerArea" class="relative w-full h-40">
                     <button id="clickButton" 
                             class="w-full h-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-5xl rounded-lg border-b-6 border-blue-800 active:border-b-4 transition-all duration-75">
@@ -141,7 +128,6 @@
                 </div>
 
 
-                <!-- Rebirth Alanı -->
                 <div class="mt-8 p-4 bg-purple-900 rounded-lg border-2 border-purple-500 text-center">
                     <h3 class="text-2xl font-bold text-purple-300 mb-2">Yeniden Doğuş (Rebirth)</h3>
                     <p class="text-sm text-gray-300 mb-3">Tüm ilerlemenizi sıfırlayın, ancak kalıcı bir çarpan ve RBP kazanın. (Gereksinim: 100 Net SBK)</p>
@@ -153,53 +139,44 @@
             </div>
         </div>
 
-        <!-- 2. Para Market Görünümü -->
         <div id="marketView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-yellow-500">
                 <h2 class="text-3xl font-bold mb-6 text-yellow-300 text-center">Pazar (Para Yükseltmeleri)</h2>
                 <p class="text-sm text-gray-300 mb-4 text-center">Paralarınızı harcayarak Tıklama veya Pasif gelirinizi kalıcı olarak artırın.</p>
                 
                 <div id="marketItems" class="space-y-4">
-                    <!-- Market Kartları Buraya JS ile Eklenecek -->
-                </div>
+                    </div>
             </div>
         </div>
         
-        <!-- 3. Görevler Görünümü -->
         <div id="missionsView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-green-500">
                 <h2 class="text-3xl font-bold mb-6 text-green-300 text-center">GÜNLÜK VE TEKRARLANABİLİR GÖREVLER</h2>
                 <p class="text-sm text-gray-300 mb-4 text-center">Görevleri tamamlayarak özel Para ve RBP ödülleri kazanın!</p>
                 
                 <div id="missionList" class="space-y-4">
-                    <!-- Görev Kartları Buraya JS ile Eklenecek -->
-                </div>
+                    </div>
             </div>
         </div>
 
-        <!-- 4. Rebirth Puanı Mağazası Görünümü -->
         <div id="rebirthStoreView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-purple-500">
                 <h2 class="text-3xl font-bold mb-6 text-purple-300 text-center">Yeniden Doğuş Mağazası (RBP)</h2>
                 <p class="text-sm text-gray-300 mb-4 text-center">RBP puanlarınızı harcayarak oyun boyunca kalıcı olarak etkili olacak yükseltmeler alın.</p>
                 
                 <div id="rebirthStoreItems" class="space-y-4">
-                    <!-- RBP Mağazası Kartları Buraya JS ile Eklenecek -->
-                </div>
+                    </div>
             </div>
         </div>
         
-        <!-- 5. Online Yarışma Görünümü -->
         <div id="competitionView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-red-500">
                 <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">CANLI TIKLAMA DÜELLOSU (1v1)</h2>
                 
-                <!-- Geri Sayım Sayacı -->
                 <div id="timerDisplay" class="p-4 mb-4 bg-red-900 rounded-lg text-center font-extrabold text-4xl border-2 border-red-500">
                     Süre: Hazır
                 </div>
 
-                <!-- Yarışma Tıklama Alanı -->
                 <div id="competitionClickerArea" class="relative w-full h-40">
                     <button id="competitionButton"
                             class="w-full h-full bg-green-600 hover:bg-green-700 text-white font-extrabold text-3xl rounded-lg transition-all duration-75">
@@ -220,19 +197,16 @@
         </div>
 
 
-        <!-- Mesaj Kutusu -->
         <div id="messageBox" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 bg-red-600 text-white font-bold rounded-lg shadow-xl hidden transition duration-300 ease-in-out">
             Yeterli paranız yok!
         </div>
 
-        <!-- Kullanıcı Kimliği Bilgisi (Firestore gereği zorunlu) -->
         <div class="mt-6 p-2 text-xs text-gray-500 text-center bg-gray-900 rounded-lg">
             Kullanıcı Kimliğiniz (Diğer oyuncular için): <span id="currentUserId" class="font-mono text-gray-300 break-all">Yükleniyor...</span>
         </div>
 
     </div>
 
-    <!-- JavaScript Oyun ve Firebase Mantığı -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -775,7 +749,6 @@
                             </button>
                         </div>
                         
-                        <!-- İlerleme Çubuğu -->
                         <div class="w-full bg-gray-600 rounded-full h-2.5 mt-2">
                             <div class="bg-green-500 h-2.5 rounded-full" style="width: ${progress}%;"></div>
                         </div>
