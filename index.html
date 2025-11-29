@@ -476,6 +476,7 @@
         // --- Eşleştirme Kuyruğu Yönetimi ---
         
         async function joinQueue() {
+            // Sadece Firebase aktifse ve 'idle' durumundaysam kuyruğa katılırım
             if (!userId || !db || matchmakingStatus !== 'idle') return;
             matchmakingStatus = 'in_queue';
             
@@ -510,12 +511,13 @@
         }
 
         function startMatchmakingListener() {
+            // Sadece Firebase aktifse dinlemeye başlarız
             if (!db) return;
             const q = collection(db, RACE_QUEUE_PATH); 
             
             onSnapshot(q, (snapshot) => {
                 if (document.getElementById('competitionView').classList.contains('hidden')) {
-                    // Kullanıcı Yarışma Görünümünde değilse, dinle ama işlem yapma
+                    // Kullanıcı Yarışma Görünümünde değilse, sadece dinle ama eşleştirme yapma
                     return; 
                 }
                 
@@ -527,6 +529,7 @@
                     if (data.userId === userId) {
                         myQueueDoc = data;
                     } else {
+                        // Diğer kullanıcıları kuyruğa ekle (kendisi hariç)
                         queueUsers.push(data);
                     }
                 });
@@ -556,10 +559,10 @@
             if (myQueueDoc && myQueueDoc.status === 'in_queue') {
                 matchmakingStatus = 'in_queue';
                 
-                // Müsait olan rakipler
+                // Müsait olan rakipler (sadece 'in_queue' durumundakiler)
                 const availableOpponents = queueUsers.filter(u => u.status === 'in_queue');
                 
-                // 3+ Kişi Kuralı: Toplam aktif kullanıcı sayısı 3 veya daha fazlaysa
+                // 3+ Kişi Kuralı: Toplam aktif kullanıcı sayısı (ben dahil) 3 veya daha fazlaysa
                 if (queueUsers.length >= 2) { 
                     // 3+ aktif kişi var. Rastgele birini rakip gibi göster ve bekleme durumunu koru.
                     const allActiveIds = queueUsers.map(u => u.userId);
@@ -571,6 +574,7 @@
                 // Eşleştirme Girişimi (Client-Side Race)
                 if (availableOpponents.length > 0) {
                      // Kuyruktaki en eski benim miyim? Ben başlatmalıyım.
+                     // (Ben + diğer müsait rakipler)
                      const allQueue = [...availableOpponents, myQueueDoc].sort((a, b) => a.timestamp - b.timestamp);
                      
                      if (allQueue.length >= 2 && allQueue[0].userId === userId) {
@@ -601,7 +605,9 @@
                     const opponentDoc = await transaction.get(opponentRef);
 
                     // Eşleşmeyi sadece ikisi de 'in_queue' ise başlat
-                    if (myDoc.data().status === 'in_queue' && opponentDoc.data().status === 'in_queue') {
+                    if (myDoc.exists() && myDoc.data().status === 'in_queue' && 
+                        opponentDoc.exists() && opponentDoc.data().status === 'in_queue') {
+                        
                         transaction.update(myRef, { status: 'in_match', opponentId: potentialOpponentId, matchStart: Date.now() });
                         transaction.update(opponentRef, { status: 'in_match', opponentId: userId, matchStart: Date.now() });
                         
@@ -624,26 +630,31 @@
         // --- Yarışma UI Güncelleme ---
 
         function updateCompetitionUI(queueUsers = []) {
+            // queueUsers, kendimiz hariç kuyruktaki diğer kullanıcıları içerir.
+            const totalUsersInQueue = queueUsers.length + (matchmakingStatus === 'in_queue' ? 1 : 0);
+            
             if (matchmakingStatus === 'idle') {
                 timerDisplay.textContent = `Süre: Hazır`;
                 competitionButton.textContent = "YARIŞMAYA BAŞLA";
                 competitionButton.disabled = false;
+                competitionButton.classList.replace('bg-gray-600', 'bg-green-600');
                 competitionButton.classList.replace('bg-red-600', 'bg-green-600');
                 competitionButton.classList.add('hover:bg-green-700');
             } else if (matchmakingStatus === 'in_queue') {
                 competitionActive = false;
                 competitionButton.disabled = true;
                 competitionButton.classList.replace('bg-green-600', 'bg-gray-600');
+                competitionButton.classList.replace('bg-red-600', 'bg-gray-600');
                 competitionButton.classList.remove('hover:bg-green-700');
                 
                 if (randomOpponentDisplayId) {
                     // 3+ Kişi Kuralı: Oyuncu Bekleniyor
                     timerDisplay.textContent = `Oyuncu Bekleniyor (Rakip: ${randomOpponentDisplayId.substring(0, 8)}...)`;
-                    competitionButton.textContent = `Eşleşme Aranıyor... (${queueUsers.length + 1} Kişi Kuyrukta)`;
+                    competitionButton.textContent = `Eşleşme Aranıyor... (${totalUsersInQueue} Kişi Kuyrukta)`;
                 } else {
-                    // 2 Kişi Aranıyor
+                    // 2 Kişi Aranıyor veya tek kişi var
                     timerDisplay.textContent = `Eşleşme Aranıyor...`;
-                    competitionButton.textContent = "Lütfen Bekleyiniz...";
+                    competitionButton.textContent = `Eşleşme Aranıyor... (${totalUsersInQueue} Kişi Kuyrukta)`;
                 }
                 
             } else if (matchmakingStatus === 'in_match') {
@@ -651,6 +662,7 @@
                 competitionButton.disabled = false;
                 competitionButton.textContent = `TIKLA! Rakip: ${opponentId.substring(0, 8)}...`;
                 competitionButton.classList.replace('bg-green-600', 'bg-red-600');
+                competitionButton.classList.replace('bg-gray-600', 'bg-red-600');
                 competitionButton.classList.add('hover:bg-red-700');
                 // Timer, startCompetition içinde yönetiliyor
             }
@@ -722,6 +734,7 @@
             competitionButton.textContent = `TIKLA! Rakip: ${opponentId.substring(0, 8)}...`;
             competitionButton.disabled = false;
             competitionButton.classList.replace('bg-green-600', 'bg-red-600');
+            competitionButton.classList.replace('bg-gray-600', 'bg-red-600');
             competitionButton.classList.add('hover:bg-red-700');
             
             startCompetitionTimer();
@@ -746,6 +759,7 @@
                 competitionButton.textContent = "TEKRAR BAŞLA";
                 competitionButton.disabled = false;
                 competitionButton.classList.replace('bg-red-600', 'bg-green-600');
+                competitionButton.classList.replace('bg-gray-600', 'bg-green-600');
                 competitionButton.classList.add('hover:bg-green-700');
                 showMessage("Yarışma Sona Erdi! Sonuçlar Liderlik Tablosunda.", 'info');
             } else {
