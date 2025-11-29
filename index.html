@@ -220,12 +220,23 @@
         let auth;
         let userId = null;
         const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'default-clicker-app';
-        const FIREBASE_CONFIG = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        
+        // Yapılandırmayı daha güvenli bir şekilde yükleme
+        let FIREBASE_CONFIG = {};
+        const initialConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        if (initialConfigString && initialConfigString.trim() !== "") {
+            try {
+                FIREBASE_CONFIG = JSON.parse(initialConfigString);
+            } catch (e) {
+                console.error("Firebase yapılandırması JSON ayrıştırma hatası:", e);
+            }
+        }
+        
         const INITIAL_AUTH_TOKEN = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // Firestore Koleksiyon Yolları (Genel Veri - Public)
         const RACE_SCORES_PATH = `artifacts/${APP_ID}/public/data/race_scores`;
-        const RACE_QUEUE_PATH = `artifacts/${APP_ID}/public/data/race_queue`; // YENİ KUYRUK
+        const RACE_QUEUE_PATH = `artifacts/${APP_ID}/public/data/race_queue`; 
         
         // Local Game State
         let coins = 0;             
@@ -305,12 +316,14 @@
         
         function showMessage(message, type = 'error') {
             messageBox.textContent = message;
+            // Tüm bg sınıflarını temizle
             messageBox.className = messageBox.className.replace(/\sbg-(red|green|purple|blue|gray)-\d+/g, '');
             
             if (type === 'error') messageBox.classList.add('bg-red-600');
             else if (type === 'success') messageBox.classList.add('bg-green-600');
             else if (type === 'info') messageBox.classList.add('bg-purple-600');
             else if (type === 'offline') messageBox.classList.add('bg-blue-600');
+            else if (type === 'leave') messageBox.classList.add('bg-red-600'); // Kırmızı arka plan
             
             messageBox.classList.remove('hidden');
             setTimeout(() => {
@@ -319,6 +332,8 @@
         }
 
         function switchView(viewId) {
+            const wasInQueue = matchmakingStatus === 'in_queue';
+
             document.querySelectorAll('.view-container').forEach(view => {
                 view.classList.add('hidden');
             });
@@ -339,7 +354,8 @@
                 joinQueue();
             } else {
                 // Diğer görünümlere geçildiğinde kuyruktan çık
-                leaveQueue();
+                // Kuyruktan ayrılırken özel mesajı göster
+                leaveQueue(wasInQueue); 
                 endCompetition(true); // Gerekirse yarışmayı durdur
             }
         }
@@ -349,9 +365,10 @@
         // ------------------------------------------------------------------
 
         async function initializeFirebase() {
+            // Yapılandırma yoksa çevrimdışı kal
             if (Object.keys(FIREBASE_CONFIG).length === 0) {
-                console.error("Firebase yapılandırması eksik. Çevrimiçi özellikler devre dışı.");
-                currentUserIdDisplay.textContent = "Çevrimdışı Mod";
+                console.warn("Firebase yapılandırması eksik veya hatalı. Çevrimiçi özellikler devre dışı.");
+                currentUserIdDisplay.textContent = "Çevrimdışı Mod (Yapılandırma Hatası)";
                 return;
             }
             
@@ -372,7 +389,7 @@
                         currentUserIdDisplay.textContent = userId;
                         loadCompetitionScore();
                         startLeaderboardListener();
-                        startMatchmakingListener(); // Eşleştirme dinleyicisini başlat
+                        startMatchmakingListener(); 
                     } else {
                         userId = null;
                         currentUserIdDisplay.textContent = "Giriş Yapılmadı";
@@ -381,7 +398,7 @@
                 
             } catch (error) {
                 console.error("Firebase başlatılırken hata oluştu:", error);
-                currentUserIdDisplay.textContent = "Hata!";
+                currentUserIdDisplay.textContent = "Hata! (Bkz. Konsol)";
             }
         }
 
@@ -476,7 +493,7 @@
         // --- Eşleştirme Kuyruğu Yönetimi ---
         
         async function joinQueue() {
-            // Sadece Firebase aktifse ve 'idle' durumundaysam kuyruğa katılırım
+            // Firebase aktif değilse veya zaten kuyruktaysam/maçtaysam işlem yapma
             if (!userId || !db || matchmakingStatus !== 'idle') return;
             matchmakingStatus = 'in_queue';
             
@@ -496,17 +513,26 @@
             }
         }
         
-        async function leaveQueue() {
+        async function leaveQueue(wasInQueueBeforeLeaving = false) {
             if (!userId || !db || matchmakingStatus === 'idle') return;
+            
+            const currentStatus = matchmakingStatus; 
             matchmakingStatus = 'idle';
             opponentId = null;
             
             const userQueueDocRef = doc(db, RACE_QUEUE_PATH, userId);
             try {
+                // Silme işlemine hata oluşursa (belge yoksa) sadece uyarı verip devam et.
                 await deleteDoc(userQueueDocRef);
             } catch (error) {
                  console.warn("Kuyruktan çıkarken (doc silinirken) hata:", error);
             }
+            
+            // Eğer eşleşme aranırken çıkıldıysa, özel mesajı göster
+            if (currentStatus === 'in_queue' && wasInQueueBeforeLeaving) {
+                showMessage("Kuyruktan başarıyla ayrıldınız. Yarıştan vazgeçildi.", 'leave');
+            }
+            
             updateCompetitionUI();
         }
 
@@ -752,6 +778,7 @@
             competitionTimer = null;
             
             // Kuyruk durumunu sıfırla (Maç bitti)
+            // isLeaving true ise, leaveQueue içindeki özel mesajı göstermemek için parametre vermiyoruz.
             await leaveQueue(); 
             
             if (!isLeaving) {
