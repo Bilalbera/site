@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilalbera'nın Oyunu (Son Sürüm)</title>
+    <title>Bilalbera'nın Oyunu (Final Sürüm)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -71,7 +71,7 @@
 <body class="text-white min-h-screen flex items-center justify-center p-4">
 
     <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Son Sürüm</h1>
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Final Sürüm</h1>
 
         <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
             <div class="col-span-1">
@@ -183,11 +183,6 @@
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-500">
                 <h2 class="text-3xl font-bold mb-6 text-gray-300 text-center">OYUN AYARLARI</h2>
                 
-                <div class="p-4 bg-blue-900 rounded-lg border-2 border-blue-500 text-center mb-4">
-                    <h3 class="text-xl font-bold text-blue-300 mb-2">💾 Otomatik Kayıt</h3>
-                    <p class="text-sm text-gray-300">Oyun Local Storage'a otomatik olarak kaydedilmektedir.</p>
-                </div>
-
                 <div class="mt-8 p-4 bg-red-900 rounded-lg border-2 border-red-500 text-center">
                     <h3 class="text-2xl font-bold text-red-300 mb-2">⚠ Tüm İlerlemeyi Sıfırla</h3>
                     <p class="text-sm text-gray-300 mb-4">Bu işlem geri alınamaz! Tüm paranız, rebirth'leriniz, RBP puanlarınız ve yükseltmeleriniz kaybolacaktır.</p>
@@ -220,8 +215,7 @@
         let rbpStartingPassiveBonus = 0; 
         let rbpPermanentClickMultiplierBonus = 0; 
         let rbpAutoclickerLevel = 0;  
-        let lastSaveTime = Date.now();
-        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60; // 8 saat
+        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60; 
         
         let totalClicks = 0; 
         let totalMarketUpgradesBought = 0;
@@ -541,6 +535,7 @@
         function checkMissionProgress() {
             let missionUpdated = false;
             MISSIONS.forEach(mission => {
+                // Görev tamamlanmış veya zaten alınmışsa kontrol etme
                 if (missionStates[mission.id]?.claimed || missionStates[mission.id]?.completed) return;
                 
                 const currentValue = getMissionProgressValue(mission);
@@ -556,7 +551,6 @@
             
             if (missionUpdated) {
                 showMessage("Yeni bir görev tamamlandı! Ödülünüzü 'Görevler' sekmesinden alın.", 'info');
-                // renderMissions'ı buradan kaldırdık, sadece sekme açıksa render yapacak.
             }
             
             // Eğer görevler sekmesi açıksa hemen yenile
@@ -626,7 +620,7 @@
             
             missionListContainer.innerHTML = missionHtmls.join('');
 
-            // Ödül alma butonları için olay dinleyicisi ekle
+            // KRİTİK: Olay dinleyicilerini her render'da yeniden ekle.
             document.querySelectorAll('#missionList .mission-claim-btn').forEach(button => {
                 if (!button.disabled && button.textContent === 'ÖDÜLÜ AL!') {
                     button.addEventListener('click', (e) => {
@@ -640,15 +634,26 @@
         function replaceMission(completedMissionId) {
             const completedIndex = MISSIONS.findIndex(m => m.id === completedMissionId);
             
-            // İlk 4 kalıcı görevi değiştirmemek için kontrol
+            // Eğer görev rotasyonel ise (index 4 ve sonrası)
             if (completedIndex !== -1 && completedIndex >= 4) {
-                // Sadece 4. görevden sonrakiler (rotasyonel olanlar) değiştirilir.
-                
+                // Yeni görev seç
                 const newMission = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
-                // Yeni görev ID'si, benzersiz olması için dinamik oluşturulur.
+                
+                // Benzersiz ID ile değiştir
                 MISSIONS[completedIndex] = { ...newMission, id: `r${Date.now()}` }; 
+                
                 rotatingMissionIndex++;
                 delete missionStates[completedMissionId]; // Eski görevin durumunu sil
+            } else if (completedMissionId.startsWith('r')) {
+                // Eğer tamamlanan görev döngüsel bir görev ise ve ilk 4'te değilse (bu blok yedek kontrol)
+                const newMission = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
+                // Geçici olarak görevler dizisindeki ilk döngüsel görevi (eğer varsa) bulup değiştirir.
+                const tempIndex = MISSIONS.findIndex(m => m.id === completedMissionId);
+                if (tempIndex !== -1) {
+                    MISSIONS[tempIndex] = { ...newMission, id: `r${Date.now()}` };
+                    rotatingMissionIndex++;
+                    delete missionStates[completedMissionId];
+                }
             }
         }
 
@@ -656,9 +661,17 @@
             const mission = MISSIONS.find(m => m.id === missionId);
             const state = missionStates[missionId];
 
-            if (!mission || !state || !state.completed || state.claimed) {
-                showMessage("Bu görevin ödülünü alamazsınız.", 'error');
+            if (!mission) {
+                showMessage("Hata: Görev bulunamadı.", 'error');
                 return;
+            }
+            if (!state || !state.completed) {
+                showMessage("Bu görev henüz tamamlanmadı!", 'error');
+                return;
+            }
+            if (state.claimed) {
+                 showMessage("Bu görevin ödülü zaten alındı.", 'error');
+                 return;
             }
 
             if (mission.reward.type === 'coin') {
@@ -667,18 +680,15 @@
             } else if (mission.reward.type === 'rbp') {
                 rebirthPoints += mission.reward.amount;
                 showMessage(`${mission.reward.amount} RBP kazandınız!`, 'success');
-                // RBP değiştiği için RBP mağazasını güncelle
                 renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️'); 
             }
 
             missionStates[missionId].claimed = true;
             
-            // Görevi değiştir
             replaceMission(missionId); 
             
-            // Tüm ekranları ve durumu güncelle
             updateDisplay();
-            renderMissions();
+            renderMissions(); // Görev listesini yenile
             saveGame();
         }
         
@@ -713,6 +723,7 @@
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
+                // Durum yükleme
                 coins = gameState.coins || 0;
                 baseClickValue = gameState.baseClickValue || 1;
                 basePassiveRate = gameState.basePassiveRate || 0;
@@ -729,6 +740,7 @@
                 missionStates = gameState.missionStates || {};
                 rotatingMissionIndex = gameState.rotatingMissionIndex || 0;
                 
+                // Market öğelerini yükle
                 gameState.marketItems?.forEach(savedItem => {
                     const item = MARKET_ITEMS.find(i => i.id === savedItem.id);
                     if (item) { item.level = savedItem.level; item.cost = savedItem.cost; }
@@ -767,9 +779,7 @@
             setInterval(handlePassiveIncome, 1000); 
         }
         function startAutoclickerLoop() {
-             // Otomatik Tıklayıcı seviyesi 0'dan büyükse döngüyü başlat
              if (rbpAutoclickerLevel > 0) {
-                 // Var olan interval'i temizle
                  if (window.autoclickerInterval) clearInterval(window.autoclickerInterval); 
                  
                  window.autoclickerInterval = setInterval(() => {
