@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilalbera'nın Oyunu (Final)</title>
+    <title>Bilalbera'nın Oyunu (Çevrimdışı Final)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -22,7 +22,7 @@
             transform: translateY(6px);
         }
         /* Kaydırma çubuğu stili */
-        #marketItems, #rebirthStoreItems, #leaderboard, #missionList {
+        #marketItems, #rebirthStoreItems, #missionList {
             max-height: 500px;
             overflow-y: auto;
         }
@@ -37,23 +37,19 @@
             background-color: #a78bfa; 
             color: #1f2937;
         }
-        #navCompetition.active {
-            background-color: #ef4444; 
-            color: #1f2937;
+        /* Yarışma butonu hep pasif renkte */
+        #navCompetition {
+            background-color: #4b5563 !important; 
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         #navMissions.active { 
             background-color: #34d399; 
             color: #1f2937;
         }
-        /* Ayarlar butonu stili */
         #navSettings.active { 
             background-color: #6b7280; 
             color: #ffffff;
-        }
-        .nav-btn:disabled, .nav-btn[disabled] {
-            opacity: 0.5;
-            cursor: not-allowed;
-            filter: grayscale(100%);
         }
         /* Tıklama Pop-up Animasyonu */
         @keyframes floatUp {
@@ -70,16 +66,12 @@
             animation: floatUp 1s ease-out forwards;
             white-space: nowrap;
         }
-        #competitionButton:disabled {
-            background-color: #4b5563; 
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body class="text-white min-h-screen flex items-center justify-center p-4">
 
     <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Lokal ID</h1>
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Çevrimdışı Sürüm</h1>
 
         <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
             <div class="col-span-1">
@@ -113,7 +105,7 @@
             <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150">Pazar (Para)</button>
             <button id="navMissions" class="nav-btn px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 font-bold transition duration-150">📝 Görevler</button>
             <button id="navRebirthStore" class="nav-btn px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 font-bold transition duration-150">RBP Mağazası</button>
-            <button id="navCompetition" class="nav-btn px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-bold transition duration-150">💥 Online Yarışma</button>
+            <button id="navCompetition" disabled class="nav-btn px-4 py-2 rounded-lg font-bold transition duration-150">💥 Online Yarışma</button>
             <button id="navSettings" class="nav-btn px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 font-bold transition duration-150">⚙️ Ayarlar</button>
         </nav>
 
@@ -173,24 +165,17 @@
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-red-500">
                 <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">💥 ONLINE YARIŞMA</h2>
                 
-                <div class="p-4 mb-4 bg-red-900 rounded-lg text-center font-extrabold text-2xl border-2 border-red-500">
-                    Sistem Çevrimdışı: Online Özellikler Devre Dışı.
+                <div class="p-8 my-8 bg-red-900 rounded-lg text-center font-extrabold text-2xl border-2 border-red-500">
+                    ONLINE ÖZELLİKLER DEVRE DIŞI
+                    <p class="text-base font-normal text-red-300 mt-4">Bu, tamamen çevrimdışı, tek oyunculu bir sürüm olduğundan, online rekabet ve liderlik tabloları kaldırılarak ID zorunluluğu ortadan kaldırılmıştır.</p>
                 </div>
                 
-                <p class="text-center text-lg text-red-300 mt-4">Rekabet modu aktif değilken ID'niz sadece bir tanımlayıcıdır.</p>
-
                 <div id="competitionClickerArea" class="relative w-full h-40 mt-4">
-                    <button id="competitionButton" disabled
-                            class="w-full h-full bg-red-800 text-white font-extrabold text-3xl rounded-lg opacity-50 cursor-not-allowed">
-                        Çevrimdışı: Yarışma Yok
+                    <button disabled
+                            class="w-full h-full bg-gray-800 text-white font-extrabold text-3xl rounded-lg opacity-50 cursor-not-allowed">
+                        Çevrimdışı Mod
                     </button>
                 </div>
-                
-                <h3 class="text-xl font-bold text-red-300 mt-6 mb-3 text-center">Liderlik Tablosu</h3>
-                <div id="leaderboard" class="space-y-2 bg-gray-800 p-4 rounded-lg">
-                    <p class="text-center text-gray-400">Online Liderlik Tablosu Çevrimdışı Modda Kullanılamaz.</p>
-                </div>
-                
             </div>
         </div>
 
@@ -200,7 +185,7 @@
                 
                 <div class="p-4 bg-blue-900 rounded-lg border-2 border-blue-500 text-center mb-4">
                     <h3 class="text-xl font-bold text-blue-300 mb-2">💾 Otomatik Kayıt</h3>
-                    <p class="text-sm text-gray-300">Oyununuz **her 5 saniyede** bir otomatik olarak kaydedilmektedir.</p>
+                    <p class="text-sm text-gray-300">Oyununuz **her 5 saniyede** bir otomatik olarak Local Storage'a kaydedilmektedir.</p>
                 </div>
 
                 <div class="mt-8 p-4 bg-red-900 rounded-lg border-2 border-red-500 text-center">
@@ -219,38 +204,12 @@
             Yeterli paranız yok!
         </div>
 
-        <div class="mt-6 p-2 text-xs text-gray-500 text-center bg-gray-900 rounded-lg">
-            Kullanıcı Kimliğiniz (Lokal ID): <span id="currentUserId" class="font-mono text-gray-300 break-all">ID Oluşturuluyor...</span>
-        </div>
-
     </div>
 
     <script type="module">
-        // Firebase import'ları sadece tutulur, ancak Lokal ID mantığı sayesinde çevrimdışı çalışacaktır.
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        
-        let FIREBASE_CONFIG = {};
-        let IS_FIREBASE_ENABLED = false;
-        
-        const initialConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{"apiKey": "YOUR_API_KEY", "projectId": "YOUR_PROJECT_ID"}';
-        const INITIAL_AUTH_TOKEN = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        
-        try {
-            FIREBASE_CONFIG = JSON.parse(initialConfigString);
-            if (FIREBASE_CONFIG && FIREBASE_CONFIG.projectId && FIREBASE_CONFIG.projectId !== "YOUR_PROJECT_ID") {
-                IS_FIREBASE_ENABLED = true;
-            }
-        } catch (e) {
-            // JSON ayrıştırma hatası, Firebase'i devre dışı bırakır.
-        }
+        // ** Firebase ve ID ile ilgili tüm import ve değişkenler KALDIRILMIŞTIR **
 
-        let db;
-        let auth;
-        let userId = null; 
-        
         // --- Game State ---
         let coins = 0;             
         let baseClickValue = 1;    
@@ -264,14 +223,12 @@
         let rbpPermanentClickMultiplierBonus = 0; 
         let rbpAutoclickerLevel = 0;  
         let lastSaveTime = Date.now();
-        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60;
+        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60; // 8 saat
         
         let totalClicks = 0; 
         let totalMarketUpgradesBought = 0;
         let missionStates = {}; 
         let rotatingMissionIndex = 0; 
-        
-        let competitionActive = false; // Online rekabet durumu
         
         // --- HTML Elements ---
         const coinDisplay = document.getElementById('coinDisplay');
@@ -284,7 +241,6 @@
         const marketItemsContainer = document.getElementById('marketItems');
         const rebirthStoreItemsContainer = document.getElementById('rebirthStoreItems'); 
         const messageBox = document.getElementById('messageBox');
-        const currentUserIdDisplay = document.getElementById('currentUserId');
         const missionListContainer = document.getElementById('missionList'); 
         const rebirthButton = document.getElementById('rebirthButton'); 
         const resetGameButton = document.getElementById('resetGameButton'); 
@@ -339,7 +295,6 @@
             else if (type === 'success') messageBox.classList.add('bg-green-600');
             else if (type === 'info') messageBox.classList.add('bg-purple-600');
             else if (type === 'offline') messageBox.classList.add('bg-blue-600');
-            else if (type === 'leave') messageBox.classList.add('bg-red-600'); 
             
             messageBox.classList.remove('hidden');
             setTimeout(() => {
@@ -348,7 +303,6 @@
         }
 
         function switchView(viewId) {
-            // Yarışma aktif değilken rahatça geçiş yapabiliriz
             document.querySelectorAll('.view-container').forEach(view => {
                 view.classList.add('hidden');
             });
@@ -366,8 +320,8 @@
             if (viewId === 'rebirthStoreView') renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
             if (viewId === 'missionsView') renderMissions();
             
-            if (viewId === 'competitionView' && !IS_FIREBASE_ENABLED) {
-                showMessage("Online Rekabet Modu devre dışıdır. Kendi ID'nizle oynamaya devam edebilirsiniz.", 'error');
+            if (viewId === 'competitionView') {
+                showMessage("Online Rekabet Modu bu sürümde kullanılamaz.", 'error');
             }
         }
 
@@ -387,56 +341,6 @@
                 setTimeout(() => {
                     popup.remove();
                 }, 1000);
-            }
-        }
-        
-        // ------------------------------------------------------------------
-        // FIREBASE İŞLEMLERİ (Lokal ID)
-        // ------------------------------------------------------------------
-
-        function generateLocalUserId() {
-            return 'LCL-' + Math.random().toString(36).substring(2, 12).toUpperCase();
-        }
-
-        async function initializeFirebase() {
-            let loadedUserId = localStorage.getItem('localUserId');
-            
-            if (loadedUserId) {
-                userId = loadedUserId;
-            } else {
-                userId = generateLocalUserId();
-                localStorage.setItem('localUserId', userId);
-            }
-            
-            currentUserIdDisplay.textContent = userId;
-            
-            if (!IS_FIREBASE_ENABLED) {
-                console.warn("Firebase anahtarları eksik. Lokal ID kullanılıyor.");
-                return;
-            }
-
-            // Firebase bağlanma denemesi (Çevrimdışı ID'ye geçmemek için)
-            try {
-                const app = initializeApp(FIREBASE_CONFIG);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        currentUserIdDisplay.textContent = userId; 
-                        // Gerçek Firebase ID'si Lokal ID'nin üzerine yazılır.
-                        localStorage.setItem('localUserId', userId); 
-                    } else {
-                        // Anonim giriş başarısız olursa, Lokal ID kalır.
-                    }
-                });
-
-                await signInAnonymously(auth);
-
-            } catch (e) {
-                console.error("Firebase başlatma hatası:", e);
-                // Bağlantı başarısız olursa, Lokal ID korunur.
             }
         }
         
@@ -531,7 +435,6 @@
                 else if (item.type === 'starting_passive') rbpStartingPassiveBonus += item.value; 
                 else if (item.type === 'rebirth_multiplier_bonus') { 
                     rbpPermanentClickMultiplierBonus += item.value;
-                    // Çarpanı hemen güncelle
                     rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); 
                 }
                 else if (item.type === 'autoclick') { 
@@ -556,10 +459,8 @@
             rebirthPoints += rbpGained;
             rebirths += 1;
             
-            // Yeni Rebirth Çarpanı
             rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); 
 
-            // Rebirth sonrası başlangıç değerleri:
             coins = rbpStartingCoinBonus; 
             basePassiveRate = rbpStartingPassiveBonus; 
             baseClickValue = 1;
@@ -660,6 +561,7 @@
                 renderMissions(); 
             }
             
+            // Eğer görevler sekmesi açıksa hemen yenile
             if (!document.getElementById('missionsView').classList.contains('hidden')) {
                  renderMissions(); 
             }
@@ -784,7 +686,6 @@
         function resetGame() {
             if (confirm("Emin misiniz? Tüm ilerlemeniz kaybolacak!")) {
                 localStorage.removeItem('clickerGameSave');
-                localStorage.removeItem('localUserId'); // Lokal ID'yi de sıfırla
 
                 window.location.reload(); 
             }
@@ -797,7 +698,6 @@
                 rbpPermanentClickMultiplierBonus, rbpAutoclickerLevel, totalClicks, 
                 totalMarketUpgradesBought, missionStates, rotatingMissionIndex,
                 lastSaveTime: Date.now(), 
-                localUserId: userId, 
                 marketItems: MARKET_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
                 rebirthItems: REBIRTH_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
             };
@@ -826,9 +726,6 @@
                 missionStates = gameState.missionStates || {};
                 rotatingMissionIndex = gameState.rotatingMissionIndex || 0;
                 
-                userId = gameState.localUserId || generateLocalUserId();
-                localStorage.setItem('localUserId', userId); 
-
                 gameState.marketItems?.forEach(savedItem => {
                     const item = MARKET_ITEMS.find(i => i.id === savedItem.id);
                     if (item) { item.level = savedItem.level; item.cost = savedItem.cost; }
@@ -877,7 +774,8 @@
         }
 
         function initializeGame() {
-            initializeFirebase(); 
+            // ID ve Firebase başlatma adımları kaldırıldı.
+
             loadGame();
 
             if (clickButton) clickButton.addEventListener('click', handleManualClick);
@@ -896,7 +794,7 @@
             startAutoclickerLoop();
             checkMissionProgress(); 
             
-            // 🔥 HER 5 SANİYEDE BİR OTO KAYIT
+            // HER 5 SANİYEDE BİR OTO KAYIT
             setInterval(saveGame, 5000);
 
             updateDisplay();
