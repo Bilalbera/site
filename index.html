@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilalbera'nın Oyunu (Final Sürüm)</title>
+    <title>Bilalbera'nın Oyunu (Final Sürüm - Liderlik)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -22,7 +22,7 @@
             transform: translateY(6px);
         }
         /* Kaydırma çubuğu stili */
-        #marketItems, #rebirthStoreItems, #missionList {
+        #marketItems, #rebirthStoreItems, #missionList, #leaderboardList {
             max-height: 500px;
             overflow-y: auto;
         }
@@ -37,11 +37,10 @@
             background-color: #a78bfa; 
             color: #1f2937;
         }
-        /* Yarışma butonu hep pasif renkte */
-        #navCompetition {
-            background-color: #4b5563 !important; 
-            cursor: not-allowed;
-            opacity: 0.6;
+        /* Yarışma butonu artık mor/kırmızı renkte aktif olabilir */
+        #navCompetition.active {
+            background-color: #dc2626 !important; 
+            color: #ffffff;
         }
         #navMissions.active { 
             background-color: #34d399; 
@@ -127,7 +126,7 @@
             <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150">Pazar (Para)</button>
             <button id="navMissions" class="nav-btn px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 font-bold transition duration-150">📝 Görevler</button>
             <button id="navRebirthStore" class="nav-btn px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 font-bold transition duration-150">RBP Mağazası</button>
-            <button id="navCompetition" disabled class="nav-btn px-4 py-2 rounded-lg font-bold transition duration-150">💥 Online Yarışma</button>
+            <button id="navCompetition" class="nav-btn px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-bold transition duration-150">🏆 Liderlik Tablosu</button>
             <button id="navSettings" class="nav-btn px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 font-bold transition duration-150">⚙️ Ayarlar</button>
         </nav>
 
@@ -166,7 +165,7 @@
         <div id="missionsView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-green-500">
                 <h2 class="text-3xl font-bold mb-6 text-green-300 text-center">GÖREVLER</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">İlk 4 görev kalıcıdır. Sonrakiler tamamlandıkça yerini yeni bir görev alır.</p>
+                <p class="text-sm text-gray-300 mb-4 text-center">İlk 4 görev kalıcıdır. Sonrakiler tamamlandıkça yerini **yeni bir döngüsel görev** alır.</p>
                 
                 <div id="missionList" class="space-y-4">
                     </div>
@@ -185,18 +184,14 @@
         
         <div id="competitionView" class="view-container hidden">
             <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-red-500">
-                <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">💥 ONLINE YARIŞMA</h2>
+                <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">🏆 YEREL LİDERLİK TABLOSU</h2>
+                <p class="text-sm text-gray-300 mb-4 text-center">Sizin en iyi **Net Pasif SBK** oranlarınızı kaydeder. Yeni bir Rebirth yaptığınızda skorunuz güncellenir.</p>
                 
-                <div class="p-8 my-8 bg-red-900 rounded-lg text-center font-extrabold text-2xl border-2 border-red-500">
-                    ONLINE ÖZELLİKLER DEVRE DIŞI
-                    <p class="text-base font-normal text-red-300 mt-4">Bu, tamamen çevrimdışı, tek oyunculu bir sürüm olduğundan, online rekabet ve liderlik tabloları kaldırılarak ID zorunluluğu ortadan kaldırılmıştır.</p>
-                </div>
-                
-                <div id="competitionClickerArea" class="relative w-full h-40 mt-4">
-                    <button disabled
-                            class="w-full h-full bg-gray-800 text-white font-extrabold text-3xl rounded-lg opacity-50 cursor-not-allowed">
-                        Çevrimdışı Mod
-                    </button>
+                <div id="leaderboardList" class="space-y-4">
+                     </div>
+
+                <div class="mt-6 p-4 bg-gray-600 rounded-lg text-sm text-center">
+                    <p>Skorlar sadece bu tarayıcıda, yerel olarak tutulur (ID gerektirmez).</p>
                 </div>
             </div>
         </div>
@@ -259,6 +254,7 @@
         let totalMarketUpgradesBought = 0;
         let missionStates = {}; 
         let rotatingMissionIndex = 0; 
+        let leaderboard = []; 
         
         // --- HTML Elements ---
         const coinDisplay = document.getElementById('coinDisplay');
@@ -274,6 +270,7 @@
         const missionListContainer = document.getElementById('missionList'); 
         const rebirthButton = document.getElementById('rebirthButton'); 
         const resetGameButton = document.getElementById('resetGameButton'); 
+        const leaderboardListContainer = document.getElementById('leaderboardList'); 
         
         // Modal Elementleri
         const resetConfirmModal = document.getElementById('resetConfirmModal');
@@ -303,12 +300,17 @@
             { id: 'm3', name: "Açgözlü Müşteri", requirementType: 'upgradesBought', requiredAmount: 5, reward: { type: 'coin', amount: 15000 }, description: "Pazardan toplam 5 yükseltme satın al." },
             { id: 'm4', name: "Rebirth Uzmanı", requirementType: 'rebirths', requiredAmount: 1, reward: { type: 'rbp', amount: 10 }, description: "İlk Yeniden Doğuşunuzu (Rebirth) gerçekleştirin." }
         ];
-
+        
+        // Yeni döngüsel görevleri tutmak için boş yer
+        for (let i = 0; i < 2; i++) {
+             MISSIONS.push({ id: `r${Date.now() + i}`, name: "Başlangıç Rotasyonu", requirementType: 'passiveRate', requiredAmount: 1, reward: { type: 'coin', amount: 100 }, description: "Bu, ilk döngüsel görevdir. Yerine yenisi gelecek." });
+        }
+        
         const ROTATING_MISSIONS = [
-            { id: 'r1', name: "Yoğun Tıklama", requirementType: 'totalClicks', requiredAmount: 5000, reward: { type: 'coin', amount: 30000 }, description: "Toplamda 5.000 kez tıklama yap." },
-            { id: 'r2', name: "Pasif Ustalık", requirementType: 'passiveRate', requiredAmount: 50, reward: { type: 'rbp', amount: 8 }, description: "Pasif SBK oranını 50'ye ulaştır." },
-            { id: 'r3', name: "Hızlı Yükseliş", requirementType: 'upgradesBought', requiredAmount: 10, reward: { type: 'coin', amount: 50000 }, description: "Pazardan toplam 10 yükseltme satın al." },
-            { id: 'r4', name: "Çoklu Rebirth", requirementType: 'rebirths', requiredAmount: 3, reward: { type: 'rbp', amount: 15 }, description: "Toplam 3 Yeniden Doğuş (Rebirth) gerçekleştirin." }
+            { name: "Yoğun Tıklama", requirementType: 'totalClicks', requiredAmount: 5000, reward: { type: 'coin', amount: 30000 }, description: "Toplamda 5.000 kez tıklama yap." },
+            { name: "Pasif Ustalık", requirementType: 'passiveRate', requiredAmount: 50, reward: { type: 'rbp', amount: 8 }, description: "Pasif SBK oranını 50'ye ulaştır." },
+            { name: "Hızlı Yükseliş", requirementType: 'upgradesBought', requiredAmount: 10, reward: { type: 'coin', amount: 50000 }, description: "Pazardan toplam 10 yükseltme satın al." },
+            { name: "Çoklu Rebirth", requirementType: 'rebirths', requiredAmount: 3, reward: { type: 'rbp', amount: 15 }, description: "Toplam 3 Yeniden Doğuş (Rebirth) gerçekleştirin." }
         ];
 
 
@@ -355,10 +357,7 @@
             if (viewId === 'marketView') renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
             if (viewId === 'rebirthStoreView') renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
             if (viewId === 'missionsView') renderMissions();
-            
-            if (viewId === 'competitionView') {
-                showMessage("Online Rekabet Modu bu sürümde kullanılamaz.", 'error');
-            }
+            if (viewId === 'competitionView') renderLeaderboard();
         }
 
         function createClickPopup(amount, x, y) {
@@ -400,11 +399,15 @@
             updateDisplay();
             checkMissionProgress();
         }
+        
+        function getNetPassiveRate() {
+            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
+            return basePassiveRate * netRebirthMultiplier * passiveMultiplier;
+        }
 
         function handlePassiveIncome() {
             if (basePassiveRate > 0) {
-                const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-                const actualPassive = basePassiveRate * netRebirthMultiplier * passiveMultiplier;
+                const actualPassive = getNetPassiveRate();
                 coins += actualPassive;
                 updateDisplay();
                 checkMissionProgress(); 
@@ -414,7 +417,7 @@
         function updateDisplay() {
             const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
             const netClick = baseClickValue * netRebirthMultiplier;
-            const netPassive = basePassiveRate * netRebirthMultiplier * passiveMultiplier;
+            const netPassive = getNetPassiveRate();
             
             const totalRebirthMultiplier = netRebirthMultiplier.toFixed(2); 
 
@@ -486,10 +489,12 @@
         }
 
         function performRebirth() {
-            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-            const netPassive = basePassiveRate * netRebirthMultiplier * passiveMultiplier; 
+            const netPassive = getNetPassiveRate();
             
             if (netPassive < 100) { showMessage(`Yeniden Doğmak için en az 100 Net SBK oranına ulaşmalısınız!`, 'error'); return; }
+            
+            // Liderlik Tablosunu Güncelle (Rebirth yapılmadan önceki pasif oran en yüksek skorudur.)
+            updateLeaderboard(netPassive);
             
             const rbpGained = Math.floor(netPassive / 100); 
             rebirthPoints += rbpGained;
@@ -504,11 +509,24 @@
 
             MARKET_ITEMS.forEach(item => { item.level = 0; item.cost = item.initialCost; });
 
+            // Görev durumlarını sıfırla/kontrol et
+            Object.keys(missionStates).forEach(id => {
+                // Kalıcı görevlerin (m1-m4) claimed (alındı) durumunu koru, completed (tamamlandı) durumunu kaldır.
+                if (id.startsWith('m') && missionStates[id].claimed) {
+                    missionStates[id].completed = false; // Tekrar tamamlanmaya hazırla (eğer koşul sağlanırsa)
+                } else {
+                    // Döngüsel görevleri tamamen sil
+                    delete missionStates[id];
+                }
+            });
+
+            // Rebirth görevini (m4) kontrol et
+            checkMissionProgress(); 
+            
             showMessage(`Yeniden Doğuş Başarılı! Kazanılan RBP: ${rbpGained}. Kalıcı Çarpanınız: x${rebirthMultiplier.toFixed(2)}`, 'success');
             updateDisplay();
             renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
             renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️'); 
-            checkMissionProgress(); 
             saveGame();
         }
 
@@ -564,8 +582,7 @@
         // ------------------------------------------------------------------
         
         function getMissionProgressValue(mission) {
-            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-            const netPassive = basePassiveRate * netRebirthMultiplier * passiveMultiplier; 
+            const netPassive = getNetPassiveRate();
             
             switch (mission.requirementType) {
                 case 'totalClicks': return totalClicks;
@@ -579,7 +596,6 @@
         function checkMissionProgress() {
             let missionUpdated = false;
             MISSIONS.forEach(mission => {
-                // Görev tamamlanmış veya zaten alınmışsa kontrol etme
                 if (missionStates[mission.id]?.claimed || missionStates[mission.id]?.completed) return;
                 
                 const currentValue = getMissionProgressValue(mission);
@@ -597,21 +613,19 @@
                 showMessage("Yeni bir görev tamamlandı! Ödülünüzü 'Görevler' sekmesinden alın.", 'info');
             }
             
-            // Eğer görevler sekmesi açıksa hemen yenile
             if (!document.getElementById('missionsView').classList.contains('hidden')) {
                  renderMissions(); 
             }
         }
         
-        /** * KRİTİK DEĞİŞİKLİK BURADA: Olay dinleyicisi inline eklenecek ve global fonksiyon kullanılacak.
-         */
         function renderMissions() {
             if (!missionListContainer) return;
             missionListContainer.innerHTML = '';
             
             const missionHtmls = [];
+            const permanentMissionCount = 4; // m1, m2, m3, m4 kalıcı görevler
 
-            MISSIONS.forEach(mission => {
+            MISSIONS.forEach((mission, index) => {
                 if (!missionStates[mission.id]) {
                     missionStates[mission.id] = {};
                 }
@@ -641,7 +655,7 @@
                 
                 const missionHtml = `
                     <div class="p-4 rounded-lg bg-gray-700 shadow-lg border ${isClaimed ? 'border-gray-500' : isCompleted ? 'border-yellow-500' : 'border-green-500'}">
-                        <h3 class="text-xl font-bold ${isCompleted && !isClaimed ? 'text-yellow-300' : 'text-green-300'}">${mission.name}</h3>
+                        <h3 class="text-xl font-bold ${isCompleted && !isClaimed ? 'text-yellow-300' : 'text-green-300'}">${mission.name} ${index >= permanentMissionCount ? '(Döngüsel)' : ''}</h3>
                         <p class="text-sm text-gray-300 mt-1">${mission.description}</p>
                         
                         <div class="mt-3 flex justify-between items-center">
@@ -671,39 +685,35 @@
             const permanentMissionCount = 4;
             const completedIndex = MISSIONS.findIndex(m => m.id === completedMissionId);
             
+            // Sadece döngüsel görevleri değiştir (index 4 ve sonrası)
             if (completedIndex !== -1 && completedIndex >= permanentMissionCount) {
-                const newMission = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
+                const nextRotatingMissionData = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
                 
-                MISSIONS[completedIndex] = { ...newMission, id: `r${Date.now()}` }; 
+                // Yeni görev oluştur ve benzersiz ID ata
+                const newMission = { 
+                    ...nextRotatingMissionData, 
+                    id: `r${Date.now()}` 
+                };
+                
+                MISSIONS[completedIndex] = newMission; 
                 
                 rotatingMissionIndex++;
-                delete missionStates[completedMissionId]; 
-            } else if (completedIndex === -1 && completedMissionId.startsWith('r')) {
-                 const newMission = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
-                 MISSIONS.push({ ...newMission, id: `r${Date.now()}` });
-                 rotatingMissionIndex++;
-                 delete missionStates[completedMissionId];
+                delete missionStates[completedMissionId]; // Eski görevin durumunu sil
+                
+                // Yeni görevi kontrol et
+                checkMissionProgress();
             }
         }
         
         // KRİTİK DÜZELTME: Bu fonksiyon, window objesine atanarak global scope'a taşındı.
         window.claimMissionReward = function(missionId) {
-            console.log(`Görev ödülü talep ediliyor: ${missionId}`); // Kontrol için eklendi.
             
             const mission = MISSIONS.find(m => m.id === missionId);
             const state = missionStates[missionId];
 
-            if (!mission) {
-                showMessage("Hata: Görev bulunamadı.", 'error');
+            if (!mission || !state || !state.completed || state.claimed) {
+                showMessage("Hata: Bu görevin ödülü alınamıyor.", 'error');
                 return;
-            }
-            if (!state || !state.completed) {
-                showMessage("Bu görev henüz tamamlanmadı!", 'error');
-                return;
-            }
-            if (state.claimed) {
-                 showMessage("Bu görevin ödülü zaten alındı.", 'error');
-                 return;
             }
 
             if (mission.reward.type === 'coin') {
@@ -718,13 +728,62 @@
             missionStates[missionId].claimed = true;
             
             // Eğer ilk 4 kalıcı görevin dışında bir görev ise, yerine yeni döngüsel görev koy.
-            if (!missionId.startsWith('m')) { 
+            const permanentMissionCount = 4;
+            const missionIndex = MISSIONS.findIndex(m => m.id === missionId);
+            
+            if (missionIndex !== -1 && missionIndex >= permanentMissionCount) {
                  replaceMission(missionId);
             }
             
             updateDisplay();
             renderMissions(); 
             saveGame();
+        }
+        
+        // ------------------------------------------------------------------
+        // LİDERLİK TABLOSU MANTIK
+        // ------------------------------------------------------------------
+        
+        function updateLeaderboard(netPassiveRate) {
+            const playerName = `Oyuncu ${rebirths}`; // Rebirth sayısını isim olarak kullan
+            
+            // Eğer skor mevcut listedeki en yüksek skorlardan biriyse ekle.
+            leaderboard.push({ name: playerName, score: Math.floor(netPassiveRate) });
+            
+            // Skorları büyükten küçüğe sırala
+            leaderboard.sort((a, b) => b.score - a.score);
+            
+            // İlk 5'i tut
+            leaderboard = leaderboard.slice(0, 5);
+        
+            saveGame(); // Liderlik tablosunu kaydet
+        }
+
+        function renderLeaderboard() {
+            if (!leaderboardListContainer) return;
+            leaderboardListContainer.innerHTML = '';
+
+            if (leaderboard.length === 0) {
+                 leaderboardListContainer.innerHTML = '<p class="text-center text-gray-400 p-8">Henüz skor yok. Bir Rebirth yapın!</p>';
+                 return;
+            }
+            
+            leaderboard.forEach((entry, index) => {
+                const rank = index + 1;
+                let rankColor = 'text-gray-400';
+                if (rank === 1) rankColor = 'text-yellow-400 text-3xl';
+                else if (rank === 2) rankColor = 'text-gray-300 text-2xl';
+                else if (rank === 3) rankColor = 'text-yellow-600 text-xl';
+
+                const entryHtml = `
+                    <div class="p-4 rounded-lg flex items-center justify-between ${rank === 1 ? 'bg-yellow-900 border-yellow-500' : 'bg-gray-700 border-gray-600'} border-2">
+                        <span class="font-extrabold ${rankColor} w-1/5">#${rank}</span>
+                        <span class="text-lg font-semibold w-2/5">${entry.name}</span>
+                        <span class="text-xl font-bold text-red-400 w-2/5 text-right">${formatNumber(entry.score)} SBK</span>
+                    </div>
+                `;
+                leaderboardListContainer.innerHTML += entryHtml;
+            });
         }
         
         // ------------------------------------------------------------------
@@ -737,6 +796,7 @@
 
         function executeResetGame() {
             localStorage.removeItem('clickerGameSave');
+            localStorage.removeItem('leaderboardSave'); // Liderlik tablosunu da sil
             window.location.reload(); 
         }
 
@@ -753,10 +813,17 @@
             };
             
             localStorage.setItem('clickerGameSave', JSON.stringify(gameState));
+            localStorage.setItem('leaderboardSave', JSON.stringify(leaderboard)); 
         }
 
         function loadGame() {
             const savedState = localStorage.getItem('clickerGameSave');
+            const savedLeaderboard = localStorage.getItem('leaderboardSave');
+
+            if (savedLeaderboard) {
+                leaderboard = JSON.parse(savedLeaderboard);
+            }
+            
             if (savedState) {
                 const gameState = JSON.parse(savedState);
                 
@@ -777,8 +844,14 @@
                 missionStates = gameState.missionStates || {};
                 rotatingMissionIndex = gameState.rotatingMissionIndex || 0;
 
+                // Görev yapısını yükle
                 if (gameState.MISSIONS && gameState.MISSIONS.length > 0) {
                      MISSIONS = gameState.MISSIONS;
+                } else {
+                     // Eğer eski kayıtta missions yoksa, başlangıç döngüsel görevleri ekle
+                     for (let i = 0; i < 2; i++) {
+                         MISSIONS.push({ id: `r${Date.now() + i}`, name: "Başlangıç Rotasyonu", requirementType: 'passiveRate', requiredAmount: 1, reward: { type: 'coin', amount: 100 }, description: "Bu, ilk döngüsel görevdir. Yerine yenisi gelecek." });
+                    }
                 }
                 
                 // Market öğelerini yükle
@@ -796,11 +869,10 @@
                 const secondsOffline = Math.min(Math.floor(timeSinceLastSave / 1000), MAX_OFFLINE_TIME_SECONDS);
                 
                 if (secondsOffline > 0) {
-                    const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-                    const passiveIncomePerSecond = basePassiveRate * netRebirthMultiplier * passiveMultiplier;
-                    const offlineGains = passiveIncomePerSecond * secondsOffline;
+                    const netPassive = getNetPassiveRate();
+                    const offlineGains = netPassive * secondsOffline;
                     
-                    if (passiveIncomePerSecond > 0 && offlineGains > 0) {
+                    if (netPassive > 0 && offlineGains > 0) {
                         coins += offlineGains;
                         showMessage(`Çevrimdışı Gelir: ${secondsOffline} saniye için ${formatNumber(offlineGains)} Para kazanıldı.`, 'offline');
                     }
