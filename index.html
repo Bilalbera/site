@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Robux Tycoon - Ultimate</title>
+    <title>Robux Tycoon - Ultimate V4</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* --- Temel Ayarlar --- */
         :root {
             --primary: #00b06f;
             --dark: #121212;
             --card-bg: #1e1e1e;
             --text: #ffffff;
             --accent: #ffb700;
-            --danger: #ff4d4d;
         }
 
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -24,551 +22,371 @@
             color: var(--text);
             margin: 0;
             padding: 0;
-            height: 100vh; /* Ekranın tamamını kapla */
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Sayfa kaymasını engelle */
+            overflow: hidden;
         }
 
-        /* --- Üst Bar --- */
+        /* --- Üst Panel --- */
         .header {
-            background: rgba(30, 30, 30, 0.95);
-            width: 100%;
-            height: 70px;
-            padding: 0 20px;
+            background: #1a1a1a;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid var(--primary);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-            z-index: 50;
-            flex-shrink: 0;
+            z-index: 100;
         }
 
         .currency-display {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.5rem;
+            gap: 8px;
+            font-size: 1.3rem;
             font-weight: 900;
             color: var(--primary);
         }
 
-        .stat-badges {
+        .stats-row {
             display: flex;
-            gap: 10px;
-            font-size: 0.8rem;
+            gap: 5px;
+            font-size: 0.7rem;
         }
-        .badge { background: #333; padding: 5px 10px; border-radius: 15px; color: #ccc; }
+        .badge { background: #333; padding: 4px 8px; border-radius: 10px; color: #aaa; }
 
-        /* --- Ana Oyun Alanı (CENTERING FIX) --- */
-        .main-stage {
-            flex: 1; /* Kalan boşluğu doldur */
+        /* --- Starter Pack (Ekrana Sığdırıldı) --- */
+        .starter-card {
+            background: linear-gradient(135deg, #ffb700, #ff8c00);
+            margin: 10px auto;
+            width: 90%;
+            max-width: 400px;
+            padding: 12px;
+            border-radius: 12px;
+            color: #000;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 15px rgba(255, 183, 0, 0.4);
+            border: 2px solid #fff;
+            animation: pulse 2s infinite;
+        }
+
+        .starter-info h4 { margin: 0; font-size: 0.9rem; text-transform: uppercase; }
+        .starter-info p { margin: 0; font-size: 0.7rem; font-weight: bold; }
+        
+        .sp-btn {
+            background: #000;
+            color: #ffb700;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 900;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* --- Ana Sahne --- */
+        .main-stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             position: relative;
-            width: 100%;
             overflow: hidden;
         }
 
-        /* Sekme İçerikleri */
         .tab-content {
             display: none;
             width: 100%;
             height: 100%;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; /* İçerikler üstten başlasın */
             padding: 20px;
-            overflow-y: auto; /* Sadece içerik kaydırılsın */
+            overflow-y: auto;
         }
+        .tab-content.active { display: flex; flex-direction: column; align-items: center; }
 
-        .tab-content.active { display: flex; }
-
-        /* Oyun Ekranı (Özel Ortalama) */
-        #game-section.active {
-            justify-content: center; /* Dikey ortalama */
-        }
+        /* Tıklama Alanı Merkeze Alındı */
+        #tab-game { justify-content: center; }
 
         .big-robux-btn {
-            width: 200px;
-            height: 200px;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg');
+            width: 180px;
+            height: 180px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg') no-repeat center;
             background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-color: transparent;
             border: none;
             cursor: pointer;
             transition: transform 0.1s;
-            filter: drop-shadow(0 0 30px rgba(0, 176, 111, 0.4));
-            animation: pulse 2s infinite;
+            filter: drop-shadow(0 0 20px rgba(0, 176, 111, 0.3));
         }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
+        .big-robux-btn:active { transform: scale(0.9); }
 
-        .big-robux-btn:active { transform: scale(0.90) !important; }
-
-        /* --- Starter Pack Widget --- */
-        .starter-pack {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: linear-gradient(135deg, #ffb700, #ff8c00);
-            width: 220px;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(255, 140, 0, 0.6);
-            border: 2px solid #fff;
-            z-index: 40;
-            color: black;
-            text-align: center;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .starter-title { font-weight: 900; font-size: 1.2rem; text-transform: uppercase; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 5px; }
-        .starter-timer { font-size: 0.9rem; font-weight: bold; color: #330000; margin-bottom: 10px; }
-        .starter-items { font-size: 0.8rem; text-align: left; margin-bottom: 10px; line-height: 1.4; }
-        .starter-btn {
-            background: black;
-            color: #ffb700;
-            border: none;
-            padding: 8px;
-            width: 100%;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .starter-btn:active { transform: scale(0.95); }
-
-        /* --- Kart Tasarımları (Market vb) --- */
-        .card-container { width: 100%; max-width: 500px; padding-bottom: 80px; }
-        
+        /* --- Market Kartları --- */
+        .card-container { width: 100%; max-width: 450px; padding-bottom: 100px; }
         .card {
             background: var(--card-bg);
             padding: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid #333;
         }
+        .card-text h3 { margin: 0; font-size: 0.95rem; }
+        .card-text p { margin: 2px 0 0; font-size: 0.75rem; color: #888; }
 
-        .card h3 { margin: 0; font-size: 1rem; color: white; }
-        .card p { margin: 5px 0 0; font-size: 0.8rem; color: #888; }
-
-        .action-btn {
-            background: #333;
+        .buy-btn {
+            background: var(--primary);
             color: white;
-            border: 1px solid var(--primary);
-            padding: 8px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .action-btn:hover { background: var(--primary); }
-
-        /* --- Alt Navigasyon --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #252525;
-            padding: 10px;
-            border-radius: 50px;
-            display: flex;
-            gap: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            z-index: 60;
-            border: 1px solid #444;
-        }
-
-        .nav-btn {
-            background: transparent;
             border: none;
-            color: #888;
-            padding: 10px 20px;
-            border-radius: 40px;
+            padding: 8px 12px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 1rem;
-            transition: 0.3s;
         }
-        .nav-btn.active { background: var(--primary); color: white; }
 
-        /* --- Kod Giriş Alanı --- */
-        .code-area {
+        /* --- Alt Menü --- */
+        .bottom-nav {
+            background: #1a1a1a;
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            width: 100%;
+            justify-content: space-around;
+            padding: 15px;
+            border-top: 1px solid #333;
         }
-        .code-input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
+        .nav-btn {
+            background: none;
             border: none;
-            background: #333;
-            color: white;
-            text-transform: uppercase;
+            color: #666;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .nav-btn.active { color: var(--primary); }
+
+        /* --- Animasyonlar --- */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
         }
 
-        /* --- Toast ve Modal --- */
         #toast {
             visibility: hidden;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
             position: fixed;
-            z-index: 100;
-            bottom: 90px;
+            bottom: 80px;
             left: 50%;
             transform: translateX(-50%);
-            border-left: 5px solid var(--primary);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            white-space: nowrap;
+            background: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
         }
-        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
-
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-box { background: #222; padding: 30px; border-radius: 15px; border: 2px solid var(--primary); text-align: center; width: 90%; max-width: 350px; }
-        .modal-input { width: 100%; padding: 10px; margin: 20px 0; font-size: 1.2rem; text-align: center; }
-        .modal-btn { width: 100%; padding: 12px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 5px; cursor: pointer; }
-
-        /* Animasyonlar */
-        @keyframes fadein { from {bottom: 50px; opacity: 0;} to {bottom: 90px; opacity: 1;} }
-        @keyframes fadeout { from {bottom: 90px; opacity: 1;} to {bottom: 50px; opacity: 0;} }
+        #toast.show { visibility: visible; animation: fadein 0.5s; }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 80px; opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="currency-display">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg" width="28">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg" width="24">
             <span id="score">0</span>
         </div>
-        <div class="stat-badges">
-            <div class="badge">⚡ <span id="click-txt">1</span></div>
-            <div class="badge">🤖 <span id="auto-txt">0</span>/sn</div>
+        <div class="stats-row">
+            <div class="badge">⚡ <span id="stat-click">1</span></div>
+            <div class="badge">🤖 <span id="stat-auto">0</span>/s</div>
+            <div class="badge">💤 <span id="stat-afk">0</span>/s</div>
         </div>
-    </div>
-
-    <div id="starterPack" class="starter-pack" style="display: none;">
-        <div class="starter-title">🔥 STARTER PACK</div>
-        <div class="starter-timer" id="sp-timer">100:00:00</div>
-        <div class="starter-items">
-            • +5 Otomatik Tık/sn<br>
-            • +5 Tıklama Gücü<br>
-            • +100 Robux İade
-        </div>
-        <button class="starter-btn" onclick="buyStarterPack()">AL - 500 R$</button>
     </div>
 
     <div class="main-stage">
-        
+        <div id="starterPack" class="starter-card" style="display: none;">
+            <div class="starter-info">
+                <h4>🔥 BAŞLANGIÇ PAKETİ</h4>
+                <p>+5 Tık, +5 Oto, +2 AFK Kazanç</p>
+            </div>
+            <button class="sp-btn" onclick="buyStarterPack()">500 R$</button>
+        </div>
+
         <div id="tab-game" class="tab-content active">
             <button class="big-robux-btn" onclick="handleClick()"></button>
-            <p style="color: #666; margin-top: 20px;">Robux kasmak için tıkla!</p>
+            <p style="color: #555; margin-top: 15px; font-weight: bold;">KASILMAK İÇİN TIKLA!</p>
         </div>
 
         <div id="tab-market" class="tab-content">
             <div class="card-container">
-                <h2 style="color:var(--primary)">Yükseltmeler</h2>
+                <h2 style="color: var(--primary); font-size: 1.2rem;">Market</h2>
                 
                 <div class="card">
-                    <div>
-                        <h3>⚡ Güçlü Parmak</h3>
-                        <p>+1 Tık Gücü</p>
+                    <div class="card-text">
+                        <h3>⚡ Keskin Parmak</h3>
+                        <p>Tıklama Gücü +1</p>
                     </div>
-                    <button class="action-btn" onclick="buyUpgrade('click', 100, 1)">100 R$</button>
+                    <button class="buy-btn" onclick="buyUpgrade('click', 100, 1)">100 R$</button>
                 </div>
 
                 <div class="card">
-                    <div>
-                        <h3>🤖 Noob Bot</h3>
-                        <p>+1 Oto/sn</p>
+                    <div class="card-text">
+                        <h3>🤖 Madenci Botu</h3>
+                        <p>Otomatik Kazanç +1/sn</p>
                     </div>
-                    <button class="action-btn" onclick="buyUpgrade('auto', 1000, 1)">1.000 R$</button>
+                    <button class="buy-btn" onclick="buyUpgrade('auto', 1000, 1)">1k R$</button>
                 </div>
 
                 <div class="card">
-                    <div>
-                        <h3>💪 Mega Tık</h3>
-                        <p>+5 Tık Gücü</p>
+                    <div class="card-text">
+                        <h3>💤 AFK Madenci</h3>
+                        <p>Çevrimdışı Kazanç +1/sn</p>
                     </div>
-                    <button class="action-btn" onclick="buyUpgrade('click', 500, 5)">500 R$</button>
+                    <button class="buy-btn" onclick="buyUpgrade('afk', 2500, 1)">2.5k R$</button>
                 </div>
 
                 <div class="card">
-                    <div>
-                        <h3>🖥️ Hacker</h3>
-                        <p>+10 Oto/sn</p>
+                    <div class="card-text">
+                        <h3>🖥️ Pro Sunucu</h3>
+                        <p>Otomatik Kazanç +10/sn</p>
                     </div>
-                    <button class="action-btn" onclick="buyUpgrade('auto', 5000, 10)">5.000 R$</button>
+                    <button class="buy-btn" onclick="buyUpgrade('auto', 8000, 10)">8k R$</button>
                 </div>
             </div>
         </div>
 
-        <div id="tab-settings" class="tab-content">
+        <div id="tab-codes" class="tab-content">
             <div class="card-container">
-                <h2 style="color: #ffb700">🎫 Hediye Kodları</h2>
-                <div class="card" style="display:block;">
-                    <p>YouTube veya Discord kodlarını buraya gir:</p>
-                    <div class="code-area">
-                        <input type="text" id="promoCodeInput" class="code-input" placeholder="KOD GİR">
-                        <button class="action-btn" onclick="redeemCode()">KULLAN</button>
-                    </div>
-                </div>
-
-                <h2 style="margin-top:30px; color: var(--primary)">Görevler</h2>
-                <div class="card" id="mission-1">
-                    <div><h3>👶 Başlangıç (1k Robux)</h3></div>
-                    <button class="action-btn" onclick="claimMission(1, 1000, 500)">Ödül: 500</button>
+                <h2 style="color: var(--accent); font-size: 1.2rem;">Kod Kullan</h2>
+                <div class="card" style="flex-direction: column; gap: 10px;">
+                    <input type="text" id="codeInput" placeholder="KODU YAZ" style="width: 100%; padding: 10px; border-radius: 5px; border: none; text-align: center;">
+                    <button class="buy-btn" style="width: 100%;" onclick="useCode()">KODU ONAYLA</button>
                 </div>
             </div>
         </div>
-
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-btn active" onclick="openTab('tab-game', this)">🎮 Oyna</button>
-        <button class="nav-btn" onclick="openTab('tab-market', this)">🛒 Market</button>
-        <button class="nav-btn" onclick="openTab('tab-settings', this)">⚙️ Kod/Görev</button>
+        <button class="nav-btn active" onclick="switchTab('tab-game', this)">OYNA</button>
+        <button class="nav-btn" onclick="switchTab('tab-market', this)">MARKET</button>
+        <button class="nav-btn" onclick="switchTab('tab-codes', this)">KODLAR</button>
     </div>
 
-    <div id="dailyModal" class="modal-overlay">
-        <div class="modal-box">
-            <h2>📅 GÜNLÜK ÖDÜL</h2>
-            <p>Bugün kaç Robux istersin?</p>
-            <input type="number" id="dailyInput" class="modal-input" placeholder="Max: 250">
-            <button class="modal-btn" onclick="claimDaily()">BOBUX AL</button>
-        </div>
-    </div>
-
-    <div id="toast">Bildirim</div>
+    <div id="toast"></div>
 
     <script>
-        // --- OYUN VERİLERİ ---
         let game = {
             score: 0,
             clickPower: 1,
-            autoPerSec: 0,
-            lastDaily: 0,
-            missions: [],
+            autoRate: 0,
+            afkRate: 0,
+            lastSave: Date.now(),
             usedCodes: [],
-            starterPackBought: false
+            starterBought: false
         };
 
-        // --- BAŞLANGIÇ ---
         window.onload = function() {
             loadGame();
+            calculateOffline();
             
-            // Starter Pack kontrolü
-            if (!game.starterPackBought) {
-                document.getElementById('starterPack').style.display = 'block';
-                startStarterTimer();
-            }
-
-            setInterval(autoMine, 1000);
-            checkDaily();
+            if(!game.starterBought) document.getElementById('starterPack').style.display = 'flex';
+            
+            setInterval(gameLoop, 1000);
             updateUI();
         };
 
-        // --- TEMEL FONKSİYONLAR ---
-        function handleClick() {
-            game.score += game.clickPower;
+        function gameLoop() {
+            game.score += game.autoRate;
+            game.lastSave = Date.now();
             updateUI();
             saveGame();
         }
 
-        function autoMine() {
-            if (game.autoPerSec > 0) {
-                game.score += game.autoPerSec;
-                updateUI();
-                saveGame();
+        function calculateOffline() {
+            const now = Date.now();
+            const diff = Math.floor((now - game.lastSave) / 1000); // Saniye cinsinden fark
+            
+            if (diff > 5 && game.afkRate > 0) {
+                const earned = diff * game.afkRate;
+                game.score += earned;
+                alert(`Sen yokken ${diff} saniye geçti ve ${earned} Robux kazandın!`);
             }
         }
 
-        function updateUI() {
-            document.getElementById('score').innerText = Math.floor(game.score).toLocaleString();
-            document.getElementById('click-txt').innerText = game.clickPower;
-            document.getElementById('auto-txt').innerText = game.autoPerSec;
-            
-            // Görev Buton Kontrolü
-            checkMissionUI(1, 1000);
+        function handleClick() {
+            game.score += game.clickPower;
+            updateUI();
         }
 
-        function saveGame() { localStorage.setItem('robuxTycoonV3', JSON.stringify(game)); }
-        
-        function loadGame() {
-            let saved = localStorage.getItem('robuxTycoonV3');
-            if (saved) game = JSON.parse(saved);
-        }
-
-        function showToast(msg) {
-            let t = document.getElementById("toast");
-            t.innerText = msg;
-            t.className = "show";
-            setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
-        }
-
-        // --- MARKET & STARTER PACK ---
         function buyUpgrade(type, cost, val) {
             if (game.score >= cost) {
                 game.score -= cost;
                 if (type === 'click') game.clickPower += val;
-                if (type === 'auto') game.autoPerSec += val;
-                showToast("✅ Satın alındı!");
+                if (type === 'auto') game.autoRate += val;
+                if (type === 'afk') game.afkRate += val;
+                showToast("Satın Alındı!");
                 updateUI();
-                saveGame();
             } else {
-                showToast("❌ Yetersiz Robux!");
+                showToast("Yetersiz Robux!");
             }
         }
 
         function buyStarterPack() {
             if (game.score >= 500) {
-                game.score -= 500; // Ücreti al
-                
-                // Ödülleri ver
+                game.score -= 500;
                 game.clickPower += 5;
-                game.autoPerSec += 5;
-                game.score += 100; // İade
-                
-                game.starterPackBought = true;
+                game.autoRate += 5;
+                game.afkRate += 2;
+                game.score += 100;
+                game.starterBought = true;
                 document.getElementById('starterPack').style.display = 'none';
-                
-                showToast("🔥 STARTER PACK ALINDI! 🔥");
+                showToast("Paket Aktif Edildi!");
                 updateUI();
-                saveGame();
             } else {
-                showToast("❌ 500 Robux gerekiyor!");
+                showToast("500 Robux Gerekiyor!");
             }
         }
 
-        // --- KOD SİSTEMİ ---
-        const codes = {
-            "FREEBOBUX100": 100,
-            "FREEROBUX25": 25
-        };
-
-        function redeemCode() {
-            let input = document.getElementById('promoCodeInput');
-            let code = input.value.trim().toUpperCase();
-
-            if (game.usedCodes.includes(code)) {
-                showToast("⚠️ Bu kodu zaten kullandın!");
-                return;
-            }
-
-            if (codes[code]) {
-                game.score += codes[code];
-                game.usedCodes.push(code);
-                showToast(`🎉 Kod Geçerli! +${codes[code]} Robux`);
-                input.value = "";
-                updateUI();
-                saveGame();
-            } else {
-                showToast("❌ Geçersiz Kod!");
-            }
-        }
-
-        // --- UI İŞLEMLERİ ---
-        function openTab(tabId, btn) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+        function useCode() {
+            const code = document.getElementById('codeInput').value.toUpperCase();
+            if (game.usedCodes.includes(code)) return showToast("Zaten kullanıldı!");
             
+            if (code === "FREEBOBUX100") {
+                game.score += 100;
+                game.usedCodes.push(code);
+                showToast("+100 Robux!");
+            } else if (code === "FREEROBUX25") {
+                game.score += 25;
+                game.usedCodes.push(code);
+                showToast("+25 Robux!");
+            } else {
+                showToast("Geçersiz Kod!");
+            }
+            updateUI();
+            document.getElementById('codeInput').value = "";
+        }
+
+        function updateUI() {
+            document.getElementById('score').innerText = Math.floor(game.score).toLocaleString();
+            document.getElementById('stat-click').innerText = game.clickPower;
+            document.getElementById('stat-auto').innerText = game.autoRate;
+            document.getElementById('stat-afk').innerText = game.afkRate;
+        }
+
+        function saveGame() { localStorage.setItem('robuxTycoonV4', JSON.stringify(game)); }
+        function loadGame() {
+            const saved = localStorage.getItem('robuxTycoonV4');
+            if (saved) game = JSON.parse(saved);
+        }
+
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
 
-        function startStarterTimer() {
-            // Sadece görsel amaçlı 100 saatten geri sayar
-            let hours = 100, mins = 0, secs = 0;
-            setInterval(() => {
-                if(secs > 0) secs--;
-                else {
-                    secs = 59;
-                    if(mins > 0) mins--;
-                    else {
-                        mins = 59;
-                        if(hours > 0) hours--;
-                    }
-                }
-                document.getElementById('sp-timer').innerText = 
-                    `${hours}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-            }, 1000);
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = 'show';
+            setTimeout(() => t.className = '', 2000);
         }
-
-        // --- GÖREV SİSTEMİ ---
-        function checkMissionUI(id, target) {
-            let btn = document.querySelector(`#mission-${id} button`);
-            if (game.missions.includes(id)) {
-                btn.innerText = "Tamamlandı";
-                btn.disabled = true;
-                btn.style.opacity = "0.5";
-            } else if (game.score >= target) {
-                btn.innerText = "🎁 ÖDÜLÜ AL";
-                btn.style.background = "#ffb700";
-                btn.style.color = "black";
-            }
-        }
-
-        function claimMission(id, target, reward) {
-            if (game.missions.includes(id)) return;
-            if (game.score >= target) {
-                game.score += reward;
-                game.missions.push(id);
-                showToast(`🏆 Görev Yapıldı! +${reward} R$`);
-                updateUI();
-                saveGame();
-            } else {
-                showToast("🔒 Hedefe ulaşmadın!");
-            }
-        }
-
-        // --- GÜNLÜK ÖDÜL ---
-        function checkDaily() {
-            if (Date.now() - game.lastDaily > 86400000) {
-                document.getElementById('dailyModal').style.display = 'flex';
-            }
-        }
-
-        function claimDaily() {
-            let val = parseInt(document.getElementById('dailyInput').value);
-            if (val > 0 && val <= 250) {
-                game.score += val;
-                game.lastDaily = Date.now();
-                document.getElementById('dailyModal').style.display = 'none';
-                showToast(`📅 +${val} Robux Alındı!`);
-                updateUI();
-                saveGame();
-            } else {
-                showToast("1-250 arası sayı gir!");
-            }
-        }
-
     </script>
 </body>
 </html>
