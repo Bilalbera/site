@@ -3,936 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bilalbera'nın Oyunu (Final Sürüm - Liderlik)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <title>Robux Clicker & Bobux Al</title>
     <style>
+        /* Genel Tasarım */
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1f2937;
-        }
-        /* Tıklama Butonuna Özel Stil */
-        #clickButton {
-            transition: all 0.1s ease;
-            box-shadow: 0 6px #0d47a1; 
-            position: relative; 
-        }
-        #clickButton:active {
-            box-shadow: 0 0 #0d47a1;
-            transform: translateY(6px);
-        }
-        /* Kaydırma çubuğu stili */
-        #marketItems, #rebirthStoreItems, #missionList, #leaderboardList {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .view-container {
-            min-height: 550px; 
-        }
-        .nav-btn.active {
-            background-color: #f59e0b; 
-            color: #1f2937;
-        }
-        #navRebirthStore.active {
-            background-color: #a78bfa; 
-            color: #1f2937;
-        }
-        /* Yarışma butonu artık mor/kırmızı renkte aktif olabilir */
-        #navCompetition.active {
-            background-color: #dc2626 !important; 
-            color: #ffffff;
-        }
-        #navMissions.active { 
-            background-color: #34d399; 
-            color: #1f2937;
-        }
-        #navSettings.active { 
-            background-color: #6b7280; 
-            color: #ffffff;
-        }
-        /* Tıklama Pop-up Animasyonu */
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-50px); opacity: 0; }
-        }
-        .click-popup {
-            position: absolute;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #34d399; 
-            pointer-events: none;
-            user-select: none;
-            animation: floatUp 1s ease-out forwards;
-            white-space: nowrap;
-        }
-        /* Onay Modalı Stilleri */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Üst Bilgi Paneli */
+        .header {
+            background-color: #2c2c2c;
+            width: 100%;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+        }
+
+        .robux-counter {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00b06f; /* Robux yeşili */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .robux-icon-small {
+            width: 40px;
+            height: 40px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg');
+            background-size: cover;
+        }
+
+        /* Tıklama Alanı */
+        .click-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            margin: 40px 0;
         }
+
+        .click-btn {
+            width: 200px;
+            height: 200px;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c7/Robux_2019_Logo_gold.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.5));
+        }
+
+        .click-btn:active {
+            transform: scale(0.90);
+        }
+
+        /* Alt Menü (Market & Görevler) */
+        .menu {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #393b3d;
+            border: 2px solid #555;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .menu-btn:hover {
+            background-color: #00b06f;
+            border-color: #00b06f;
+        }
+
+        /* Günlük Ödül Modalı (Penceresi) */
+        #dailyModal {
+            display: none; /* Başlangıçta gizli */
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
         .modal-content {
-            background-color: #1f2937;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            max-width: 400px;
+            background-color: #252525;
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #00b06f;
+            text-align: center;
             width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 30px rgba(0, 176, 111, 0.4);
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #fff;
+        }
+
+        input[type="number"] {
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 80%;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: none;
             text-align: center;
         }
+
+        .bobux-al-btn {
+            background-color: #00b06f;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .bobux-al-btn:hover {
+            background-color: #008c58;
+        }
+
+        .timer-info {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 10px;
+        }
+
     </style>
 </head>
-<body class="text-white min-h-screen flex items-center justify-center p-4">
+<body>
 
-    <div class="w-full max-w-4xl bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 class="text-4xl font-extrabold text-center mb-6 text-blue-400">THE CLICKER: Final Sürüm</h1>
-
-        <div class="grid grid-cols-2 gap-4 p-4 mb-4 bg-gray-900 rounded-lg border border-gray-700">
-            <div class="col-span-1">
-                <p class="text-base">💰 Para:</p>
-                <span id="coinDisplay" class="font-bold text-yellow-400 text-3xl block">0</span>
-            </div>
-            <div class="col-span-1">
-                <p class="text-base">🌟 Rebirth:</p>
-                <span id="rebirthDisplay" class="font-bold text-indigo-400 text-3xl block">0</span>
-            </div>
-            <div class="col-span-1">
-                <p class="text-base text-purple-300">⚛️ RBP (Puan):</p>
-                <span id="rbpDisplay" class="font-semibold text-purple-400 text-2xl block">0</span>
-            </div>
-            <div class="col-span-1">
-                <p class="text-base text-red-300">⚙️ Pasif (SBK):</p>
-                <span id="passiveRateDisplay" class="font-semibold text-red-400 text-2xl block">0</span>
-            </div>
-            <div class="col-span-2">
-                <p class="text-base text-green-300">✨ Tıklama (TBK):</p>
-                <span id="clickValueDisplay" class="font-semibold text-green-400 text-2xl block">1</span>
-            </div>
-            <div class="col-span-2 text-center">
-                <p class="text-sm text-gray-400">⚡ Otomatik Tıklama Hızı:</p>
-                <span id="autoclickerDisplay" class="font-semibold text-blue-300 text-xl block">0 / sn</span>
-            </div>
+    <div class="header">
+        <div class="robux-counter">
+            <div class="robux-icon-small"></div>
+            <span id="score">0</span>
         </div>
-
-        <nav class="flex justify-center flex-wrap gap-4 mb-6">
-            <button id="navClicker" class="nav-btn active px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-bold transition duration-150">Tıklama Merkezi</button>
-            <button id="navMarket" class="nav-btn px-4 py-2 rounded-lg bg-yellow-600 hover:bg-yellow-700 font-bold transition duration-150">Pazar (Para)</button>
-            <button id="navMissions" class="nav-btn px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 font-bold transition duration-150">📝 Görevler</button>
-            <button id="navRebirthStore" class="nav-btn px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 font-bold transition duration-150">RBP Mağazası</button>
-            <button id="navCompetition" class="nav-btn px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 font-bold transition duration-150">🏆 Liderlik Tablosu</button>
-            <button id="navSettings" class="nav-btn px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 font-bold transition duration-150">⚙️ Ayarlar</button>
-        </nav>
-
-        <div id="clickerView" class="view-container">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-blue-500">
-                <h2 class="text-3xl font-bold mb-6 text-blue-300 text-center">Tıkla ve Kazan!</h2>
-                
-                <div id="clickerArea" class="relative w-full h-40">
-                    <button id="clickButton" 
-                            class="w-full h-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-5xl rounded-lg border-b-6 border-blue-800 active:border-b-4 transition-all duration-75">
-                        TIKLA!
-                    </button>
-                </div>
-
-                <div class="mt-8 p-4 bg-purple-900 rounded-lg border-2 border-purple-500 text-center">
-                    <h3 class="text-2xl font-bold text-purple-300 mb-2">Yeniden Doğuş (Rebirth)</h3>
-                    <p class="text-sm text-gray-300 mb-3">Tüm ilerlemenizi sıfırlayın, ancak kalıcı bir çarpan ve RBP kazanın. (Gereksinim: 100 Net SBK)</p>
-                    <button id="rebirthButton" 
-                            class="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-full shadow-lg transition duration-150">
-                        YENİDEN DOĞ
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="marketView" class="view-container hidden">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-yellow-500">
-                <h2 class="text-3xl font-bold mb-6 text-yellow-300 text-center">Pazar (Para Yükseltmeleri)</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">Paralarınızı harcayarak Tıklama veya Pasif gelirinizi kalıcı olarak artırın.</p>
-                
-                <div id="marketItems" class="space-y-4">
-                    </div>
-            </div>
-        </div>
-        
-        <div id="missionsView" class="view-container hidden">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-green-500">
-                <h2 class="text-3xl font-bold mb-6 text-green-300 text-center">GÖREVLER</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">İlk 4 görev kalıcıdır. Sonrakiler tamamlandıkça yerini **yeni bir döngüsel görev** alır.</p>
-                
-                <div id="missionList" class="space-y-4">
-                    </div>
-            </div>
-        </div>
-
-        <div id="rebirthStoreView" class="view-container hidden">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-purple-500">
-                <h2 class="text-3xl font-bold mb-6 text-purple-300 text-center">Yeniden Doğuş Mağazası (RBP)</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">RBP puanlarınızı harcayarak oyun boyunca kalıcı olarak etkili olacak yükseltmeler alın.</p>
-                
-                <div id="rebirthStoreItems" class="space-y-4">
-                    </div>
-            </div>
-        </div>
-        
-        <div id="competitionView" class="view-container hidden">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-red-500">
-                <h2 class="text-3xl font-bold mb-6 text-red-300 text-center">🏆 YEREL LİDERLİK TABLOSU</h2>
-                <p class="text-sm text-gray-300 mb-4 text-center">Sizin en iyi **Net Pasif SBK** oranlarınızı kaydeder. Yeni bir Rebirth yaptığınızda skorunuz güncellenir.</p>
-                
-                <div id="leaderboardList" class="space-y-4">
-                     </div>
-
-                <div class="mt-6 p-4 bg-gray-600 rounded-lg text-sm text-center">
-                    <p>Skorlar sadece bu tarayıcıda, yerel olarak tutulur (ID gerektirmez).</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="settingsView" class="view-container hidden">
-            <div class="p-6 bg-gray-700 rounded-xl shadow-inner border border-gray-500">
-                <h2 class="text-3xl font-bold mb-6 text-gray-300 text-center">OYUN AYARLARI</h2>
-                
-                <div class="mt-8 p-4 bg-red-900 rounded-lg border-2 border-red-500 text-center">
-                    <h3 class="text-2xl font-bold text-red-300 mb-2">⚠ Tüm İlerlemeyi Sıfırla</h3>
-                    <p class="text-sm text-gray-300 mb-4">Bu işlem geri alınamaz! Tüm paranız, rebirth'leriniz, RBP puanlarınız ve yükseltmeleriniz kaybolacaktır.</p>
-                    <button id="resetGameButton" 
-                            class="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-full shadow-lg transition duration-150">
-                        OYUNU SIFIRLA
-                    </button>
-                </div>
-            </div>
-        </div>
-
-
-        <div id="messageBox" class="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 p-3 bg-red-600 text-white font-bold rounded-lg shadow-xl hidden transition duration-300 ease-in-out">
-            Yeterli paranız yok!
-        </div>
-
     </div>
 
-    <div id="resetConfirmModal" class="modal-overlay hidden">
+    <div class="click-area">
+        <h1>ROBUX KAZANMAK İÇİN TIKLA!</h1>
+        <button class="click-btn" onclick="addRobux()"></button>
+    </div>
+
+    <div class="menu">
+        <button class="menu-btn" onclick="alert('Market Yakında Eklenecek!')">🛒 Market</button>
+        <button class="menu-btn" onclick="alert('Görevler Yakında Eklenecek!')">📜 Görevler</button>
+    </div>
+
+    <div id="dailyModal">
         <div class="modal-content">
-            <h3 class="text-3xl font-bold text-red-500 mb-4">EMİN MİSİNİZ?</h3>
-            <p class="text-xl text-gray-300 mb-6">Tüm oyun ilerlemeniz kalıcı olarak silinecektir!</p>
-            <div class="flex justify-center gap-4">
-                <button id="cancelResetButton" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-150">
-                    İPTAL
-                </button>
-                <button id="confirmResetButton" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition duration-150">
-                    ONAYLA
-                </button>
-            </div>
+            <h2>GÜNLÜK BOBUX HAKKIN VAR!</h2>
+            <p>Maksimum 250 Robux alabilirsin.</p>
+            
+            <input type="number" id="bobuxInput" placeholder="Miktar gir (Max 250)" min="1" max="250">
+            
+            <button class="bobux-al-btn" onclick="claimDaily()">BOBUX AL</button>
+            <p id="error-msg" style="color: #ff4d4d; display: none; margin-top:10px;">Lütfen 1 ile 250 arası bir sayı girin!</p>
         </div>
     </div>
 
-
-    <script type="module">
+    <script>
+        // --- Değişkenler ve Ayarlar ---
+        let score = 0;
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 Saat (Milisaniye cinsinden)
         
-        // --- Game State ---
-        let coins = 0;             
-        let baseClickValue = 1;    
-        let basePassiveRate = 0;   
-        let rebirths = 0;          
-        let rebirthMultiplier = 1; 
-        let passiveMultiplier = 1; 
-        let rebirthPoints = 0;     
-        let rbpStartingCoinBonus = 0; 
-        let rbpStartingPassiveBonus = 0; 
-        let rbpPermanentClickMultiplierBonus = 0; 
-        let rbpAutoclickerLevel = 0;  
-        const MAX_OFFLINE_TIME_SECONDS = 8 * 60 * 60; 
-        
-        let totalClicks = 0; 
-        let totalMarketUpgradesBought = 0;
-        let missionStates = {}; 
-        let rotatingMissionIndex = 0; 
-        let leaderboard = []; 
-        
-        // --- HTML Elements ---
-        const coinDisplay = document.getElementById('coinDisplay');
-        const rebirthDisplay = document.getElementById('rebirthDisplay');
-        const rbpDisplay = document.getElementById('rbpDisplay'); 
-        const clickValueDisplay = document.getElementById('clickValueDisplay');
-        const passiveRateDisplay = document.getElementById('passiveRateDisplay');
-        const autoclickerDisplay = document.getElementById('autoclickerDisplay'); 
-        const clickButton = document.getElementById('clickButton');
-        const marketItemsContainer = document.getElementById('marketItems');
-        const rebirthStoreItemsContainer = document.getElementById('rebirthStoreItems'); 
-        const messageBox = document.getElementById('messageBox');
-        const missionListContainer = document.getElementById('missionList'); 
-        const rebirthButton = document.getElementById('rebirthButton'); 
-        const resetGameButton = document.getElementById('resetGameButton'); 
-        const leaderboardListContainer = document.getElementById('leaderboardList'); 
-        
-        // Modal Elementleri
-        const resetConfirmModal = document.getElementById('resetConfirmModal');
-        const confirmResetButton = document.getElementById('confirmResetButton');
-        const cancelResetButton = document.getElementById('cancelResetButton');
-
-
-        // --- Items and Missions Data ---
-        const MARKET_ITEMS = [
-            { id: 1, name: "Gelişmiş Parmak", cost: 10, initialCost: 10, multiplier: 1.5, type: 'click', value: 1, level: 0, maxLevel: 50, description: "Tıklama başına kazancı 1 artırır." },
-            { id: 5, name: "Lazer Parmak", cost: 100, initialCost: 100, multiplier: 1.6, type: 'click', value: 3, level: 0, maxLevel: 30, description: "Tıklama başına kazancı 3 artırır. (Kullanıcının isteği)" }, 
-            { id: 2, name: "Otomatik Tıklayıcı", cost: 100, initialCost: 100, multiplier: 1.15, type: 'passive', value: 1, level: 0, maxLevel: 100, description: "Saniye başına 1 pasif gelir sağlar." },
-            { id: 4, name: "İş Merkezi", cost: 5000, initialCost: 5000, multiplier: 1.3, type: 'passive', value: 50, level: 0, maxLevel: 10, description: "Saniye başına 50 pasif gelir sağlar." },
-            { id: 6, name: "Enerji Santrali", cost: 100000, initialCost: 100000, multiplier: 2.0, type: 'multiplier', value: 1.05, level: 0, maxLevel: 5, description: "Tüm Pasif SBK gelirini %5 (x1.05) artırır. (Kalıcı Çarpan)" }, 
-        ];
-
-        const REBIRTH_ITEMS = [
-            { id: 101, name: "Başlangıç Parası", cost: 5, initialCost: 5, multiplier: 1.5, type: 'starting_coin', value: 10, level: 0, maxLevel: 10, description: "Her Rebirth sonrası 10 fazladan para ile başlar." },
-            { id: 104, name: "Kalıcı Tıklama Desteği", cost: 20, initialCost: 20, multiplier: 1.8, type: 'rebirth_multiplier_bonus', value: 0.05, level: 0, maxLevel: 5, description: "Tüm Rebirth Çarpanına +0.05 kalıcı bonus ekler." }, 
-            { id: 105, name: "Başlangıç Pasif Geliri", cost: 30, initialCost: 30, multiplier: 2.0, type: 'starting_passive', value: 5, level: 0, maxLevel: 5, description: "Her Rebirth sonrası 5 Pasif SBK geliri ile başlar. (SBK'ya eklenir)" }, 
-            { id: 103, name: "Otomatik Tıklama", cost: 50, initialCost: 50, multiplier: 2.5, type: 'autoclick', value: 1, level: 0, maxLevel: 10, description: "Saniyede 1 Otomatik Tıklama ekler. (Kalıcı)" }
-        ];
-        
-        let MISSIONS = [
-            { id: 'm1', name: "Acemi Tıklayıcı", requirementType: 'totalClicks', requiredAmount: 1000, reward: { type: 'coin', amount: 5000 }, description: "Toplamda 1.000 kez tıklama yap." },
-            { id: 'm2', name: "Yatırımcı Ruh", requirementType: 'passiveRate', requiredAmount: 10, reward: { type: 'rbp', amount: 5 }, description: "Pasif SBK oranını 10'a ulaştır." },
-            { id: 'm3', name: "Açgözlü Müşteri", requirementType: 'upgradesBought', requiredAmount: 5, reward: { type: 'coin', amount: 15000 }, description: "Pazardan toplam 5 yükseltme satın al." },
-            { id: 'm4', name: "Rebirth Uzmanı", requirementType: 'rebirths', requiredAmount: 1, reward: { type: 'rbp', amount: 10 }, description: "İlk Yeniden Doğuşunuzu (Rebirth) gerçekleştirin." }
-        ];
-        
-        // Yeni döngüsel görevleri tutmak için boş yer
-        for (let i = 0; i < 2; i++) {
-             MISSIONS.push({ id: `r${Date.now() + i}`, name: "Başlangıç Rotasyonu", requirementType: 'passiveRate', requiredAmount: 1, reward: { type: 'coin', amount: 100 }, description: "Bu, ilk döngüsel görevdir. Yerine yenisi gelecek." });
-        }
-        
-        const ROTATING_MISSIONS = [
-            { name: "Yoğun Tıklama", requirementType: 'totalClicks', requiredAmount: 5000, reward: { type: 'coin', amount: 30000 }, description: "Toplamda 5.000 kez tıklama yap." },
-            { name: "Pasif Ustalık", requirementType: 'passiveRate', requiredAmount: 50, reward: { type: 'rbp', amount: 8 }, description: "Pasif SBK oranını 50'ye ulaştır." },
-            { name: "Hızlı Yükseliş", requirementType: 'upgradesBought', requiredAmount: 10, reward: { type: 'coin', amount: 50000 }, description: "Pazardan toplam 10 yükseltme satın al." },
-            { name: "Çoklu Rebirth", requirementType: 'rebirths', requiredAmount: 3, reward: { type: 'rbp', amount: 15 }, description: "Toplam 3 Yeniden Doğuş (Rebirth) gerçekleştirin." }
-        ];
-
-
-        // ------------------------------------------------------------------
-        // YARDIMCI VE UI FONKSİYONLARI
-        // ------------------------------------------------------------------
-
-        function formatNumber(num) {
-            if (num >= 1000000) {
-                return (num / 1000000).toFixed(2) + " M";
-            }
-            return Math.floor(num).toLocaleString('tr-TR');
-        }
-        
-        function showMessage(message, type = 'error') {
-            messageBox.textContent = message;
-            messageBox.className = messageBox.className.replace(/\sbg-(red|green|purple|blue|gray)-\d+/g, '');
-            
-            if (type === 'error') messageBox.classList.add('bg-red-600');
-            else if (type === 'success') messageBox.classList.add('bg-green-600');
-            else if (type === 'info') messageBox.classList.add('bg-purple-600');
-            else if (type === 'offline') messageBox.classList.add('bg-blue-600');
-            
-            messageBox.classList.remove('hidden');
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 3000); 
-        }
-
-        function switchView(viewId) {
-            document.querySelectorAll('.view-container').forEach(view => {
-                view.classList.add('hidden');
-            });
-            document.getElementById(viewId)?.classList.remove('hidden');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            const navBase = viewId.replace('View', '');
-            const navId = 'nav' + navBase.charAt(0).toUpperCase() + navBase.slice(1);
-            document.getElementById(navId)?.classList.add('active');
-            
-            if (viewId === 'marketView') renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
-            if (viewId === 'rebirthStoreView') renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
-            if (viewId === 'missionsView') renderMissions();
-            if (viewId === 'competitionView') renderLeaderboard();
-        }
-
-        function createClickPopup(amount, x, y) {
-            const popup = document.createElement('div');
-            popup.textContent = `+${formatNumber(amount)}`;
-            popup.classList.add('click-popup');
-            
-            const area = document.getElementById('clickerArea');
-            if (area) {
-                const rect = area.getBoundingClientRect();
-                popup.style.left = `${x}px`;
-                popup.style.top = `${y}px`;
-                
-                area.appendChild(popup);
-                
-                setTimeout(() => {
-                    popup.remove();
-                }, 1000);
-            }
-        }
-        
-        // ------------------------------------------------------------------
-        // OYUN MANTIK VE DÖNGÜSÜ
-        // ------------------------------------------------------------------
-        
-        function handleManualClick(e) {
-            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-            const actualClick = baseClickValue * netRebirthMultiplier;
-            coins += actualClick;
-            totalClicks += 1;
-
-            if (e) {
-                const rect = clickButton.getBoundingClientRect();
-                const x = e.clientX - rect.left - (rect.width / 2) + Math.random() * 80 - 40;
-                const y = e.clientY - rect.top - (rect.height / 2) + Math.random() * 60 - 30;
-                createClickPopup(actualClick, x, y);
-            }
-            
-            updateDisplay();
-            checkMissionProgress();
-        }
-        
-        function getNetPassiveRate() {
-            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-            return basePassiveRate * netRebirthMultiplier * passiveMultiplier;
-        }
-
-        function handlePassiveIncome() {
-            if (basePassiveRate > 0) {
-                const actualPassive = getNetPassiveRate();
-                coins += actualPassive;
+        // --- Sayfa Yüklendiğinde Çalışan Kısım ---
+        window.onload = function() {
+            // Kayıtlı Robux'u yükle
+            if(localStorage.getItem('robuxScore')) {
+                score = parseInt(localStorage.getItem('robuxScore'));
                 updateDisplay();
-                checkMissionProgress(); 
             }
+
+            // Günlük ödül kontrolü yap
+            checkDailyReward();
+        };
+
+        // --- Robux Ekleme (+1 Tıklama) ---
+        function addRobux() {
+            score++;
+            updateDisplay();
+            saveData();
         }
 
+        // --- Ekranı Güncelleme ---
         function updateDisplay() {
-            const netRebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20);
-            const netClick = baseClickValue * netRebirthMultiplier;
-            const netPassive = getNetPassiveRate();
-            
-            const totalRebirthMultiplier = netRebirthMultiplier.toFixed(2); 
-
-            if (coinDisplay) coinDisplay.textContent = formatNumber(coins);
-            if (rebirthDisplay) rebirthDisplay.textContent = formatNumber(rebirths);
-            if (rbpDisplay) rbpDisplay.textContent = formatNumber(rebirthPoints); 
-            if (clickValueDisplay) clickValueDisplay.textContent = `${formatNumber(netClick)} (x${totalRebirthMultiplier})`; 
-            if (passiveRateDisplay) passiveRateDisplay.textContent = `${formatNumber(netPassive)} (x${netRebirthMultiplier.toFixed(2)})`; 
-            if (autoclickerDisplay) autoclickerDisplay.textContent = `${rbpAutoclickerLevel} / sn`;
-
-            const requiredPassiveRate = 100;
-            if (rebirthButton) { 
-                 const canRebirth = netPassive >= requiredPassiveRate;
-                 if (canRebirth) {
-                     rebirthButton.classList.replace('bg-indigo-600', 'bg-purple-600');
-                     rebirthButton.classList.add('hover:bg-purple-700');
-                     rebirthButton.disabled = false;
-                } else {
-                     rebirthButton.classList.replace('bg-purple-600', 'bg-indigo-600');
-                     rebirthButton.classList.remove('hover:bg-purple-700');
-                     rebirthButton.disabled = true;
-                }
-            }
-        }
-        
-        function buyItem(item) {
-             if (item.level >= item.maxLevel) { showMessage(`${item.name} zaten maksimum seviyede!`); return; }
-             if (coins >= item.cost) {
-                 coins -= item.cost;
-                 item.level += 1;
-                 item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
-                 
-                 if (item.type === 'click') baseClickValue += item.value;
-                 else if (item.type === 'passive') basePassiveRate += item.value;
-                 else if (item.type === 'multiplier') passiveMultiplier *= item.value; 
-                 
-                 totalMarketUpgradesBought += 1;
-                 
-                 updateDisplay();
-                 renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
-                 checkMissionProgress();
-                 saveGame();
-             } else { showMessage("Yeterli paranız yok!"); }
+            document.getElementById('score').innerText = score.toLocaleString();
         }
 
-        function buyRebirthItem(item) {
-            if (item.level >= item.maxLevel) { showMessage(`${item.name} zaten maksimum seviyede!`, 'info'); return; }
-            if (rebirthPoints >= item.cost) {
-                rebirthPoints -= item.cost;
-                item.level += 1;
-                item.cost = Math.floor(item.initialCost * Math.pow(item.multiplier, item.level));
-                
-                if (item.type === 'starting_coin') rbpStartingCoinBonus += item.value;
-                else if (item.type === 'starting_passive') rbpStartingPassiveBonus += item.value; 
-                else if (item.type === 'rebirth_multiplier_bonus') { 
-                    rbpPermanentClickMultiplierBonus += item.value;
-                    rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); 
-                }
-                else if (item.type === 'autoclick') { 
-                    rbpAutoclickerLevel += item.value;
-                    clearInterval(window.autoclickerInterval);
-                    startAutoclickerLoop();
-                }
-                
-                updateDisplay();
-                renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️');
-                saveGame();
-            } else { showMessage("Yeterli RBP'niz yok!", 'error'); }
+        // --- Verileri Kaydetme ---
+        function saveData() {
+            localStorage.setItem('robuxScore', score);
         }
 
-        function performRebirth() {
-            const netPassive = getNetPassiveRate();
-            
-            if (netPassive < 100) { showMessage(`Yeniden Doğmak için en az 100 Net SBK oranına ulaşmalısınız!`, 'error'); return; }
-            
-            // Liderlik Tablosunu Güncelle (Rebirth yapılmadan önceki pasif oran en yüksek skorudur.)
-            updateLeaderboard(netPassive);
-            
-            const rbpGained = Math.floor(netPassive / 100); 
-            rebirthPoints += rbpGained;
-            rebirths += 1;
-            
-            rebirthMultiplier = (1 + rbpPermanentClickMultiplierBonus) + (rebirths * 0.20); 
+        // --- Günlük Ödül Kontrolü ---
+        function checkDailyReward() {
+            const lastClaimTime = localStorage.getItem('lastClaimTime');
+            const now = Date.now();
 
-            coins = rbpStartingCoinBonus; 
-            basePassiveRate = rbpStartingPassiveBonus; 
-            baseClickValue = 1;
-            passiveMultiplier = 1; 
-
-            MARKET_ITEMS.forEach(item => { item.level = 0; item.cost = item.initialCost; });
-
-            // Görev durumlarını sıfırla/kontrol et
-            Object.keys(missionStates).forEach(id => {
-                // Kalıcı görevlerin (m1-m4) claimed (alındı) durumunu koru, completed (tamamlandı) durumunu kaldır.
-                if (id.startsWith('m') && missionStates[id].claimed) {
-                    missionStates[id].completed = false; // Tekrar tamamlanmaya hazırla (eğer koşul sağlanırsa)
-                } else {
-                    // Döngüsel görevleri tamamen sil
-                    delete missionStates[id];
-                }
-            });
-
-            // Rebirth görevini (m4) kontrol et
-            checkMissionProgress(); 
-            
-            showMessage(`Yeniden Doğuş Başarılı! Kazanılan RBP: ${rbpGained}. Kalıcı Çarpanınız: x${rebirthMultiplier.toFixed(2)}`, 'success');
-            updateDisplay();
-            renderMarket(MARKET_ITEMS, marketItemsContainer, buyItem, coins, '💰');
-            renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️'); 
-            saveGame();
-        }
-
-        function renderMarket(items, container, buyFunction, currency, currencySymbol) {
-            if (!container) return; 
-            container.innerHTML = '';
-            
-            items.forEach(item => {
-                const isAffordable = currency >= item.cost;
-                const isMaxLevel = item.level >= item.maxLevel;
-                
-                let colorClass = currencySymbol === '💰' ? 'text-yellow-400' : 'text-purple-400';
-
-                const cardHtml = `
-                    <div id="item-${item.id}" class="p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between transition duration-200 ${isMaxLevel ? 'bg-gray-600 opacity-50' : isAffordable ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-700 opacity-70 cursor-not-allowed'}">
-                        <div class="mb-2 sm:mb-0">
-                            <h3 class="text-xl font-bold ${colorClass}">${item.name} <span class="text-base text-gray-400">(Seviye: ${item.level} / ${item.maxLevel})</span></h3>
-                            <p class="text-sm text-gray-300">${item.description}</p>
-                        </div>
-                        <button class="buy-btn w-full sm:w-auto px-4 py-2 mt-2 sm:mt-0 rounded-lg font-bold transition duration-200" 
-                                data-item-id="${item.id}"
-                                data-currency-type="${currencySymbol === '💰' ? 'coin' : 'rbp'}"
-                                ${isMaxLevel || !isAffordable ? 'disabled' : ''}
-                                style="${isMaxLevel ? 'background-color: #4b5563; color: #9ca3af;' : isAffordable ? 'background-color: #f59e0b; color: #1f2937;' : 'background-color: #9ca3af; color: #4b5563; cursor: not-allowed;'}">
-                            ${isMaxLevel ? 'MAX SEVİYE' : `${formatNumber(item.cost)} ${currencySymbol} AL`}
-                        </button>
-                    </div>
-                `;
-                container.innerHTML += cardHtml;
-            });
-            
-            document.querySelectorAll(`#${container.id} .buy-btn`).forEach(button => {
-                if (!button.disabled) {
-                    button.addEventListener('click', (e) => {
-                        const itemId = parseInt(e.currentTarget.getAttribute('data-item-id'));
-                        const currencyType = e.currentTarget.getAttribute('data-currency-type');
-                        
-                        let item;
-                        if (currencyType === 'coin') {
-                            item = MARKET_ITEMS.find(i => i.id === itemId);
-                            if (item) buyFunction(item);
-                        } else if (currencyType === 'rbp') {
-                            item = REBIRTH_ITEMS.find(i => i.id === itemId);
-                            if (item) buyFunction(item);
-                        }
-                    });
-                }
-            });
-        }
-        
-        // ------------------------------------------------------------------
-        // GÖREVLER (MISSIONS) MANTIK
-        // ------------------------------------------------------------------
-        
-        function getMissionProgressValue(mission) {
-            const netPassive = getNetPassiveRate();
-            
-            switch (mission.requirementType) {
-                case 'totalClicks': return totalClicks;
-                case 'passiveRate': return Math.floor(netPassive); 
-                case 'upgradesBought': return totalMarketUpgradesBought;
-                case 'rebirths': return rebirths;
-                default: return 0;
+            // Eğer hiç alınmamışsa veya son alma zamanının üzerinden 24 saat geçmişse
+            if (!lastClaimTime || (now - lastClaimTime > ONE_DAY_MS)) {
+                // Modalı Göster
+                document.getElementById('dailyModal').style.display = 'flex';
             }
         }
 
-        function checkMissionProgress() {
-            let missionUpdated = false;
-            MISSIONS.forEach(mission => {
-                if (missionStates[mission.id]?.claimed || missionStates[mission.id]?.completed) return;
-                
-                const currentValue = getMissionProgressValue(mission);
-                
-                if (currentValue >= mission.requiredAmount) {
-                    if (!missionStates[mission.id]) {
-                        missionStates[mission.id] = {};
-                    }
-                    missionStates[mission.id].completed = true;
-                    missionUpdated = true;
-                }
-            });
-            
-            if (missionUpdated) {
-                showMessage("Yeni bir görev tamamlandı! Ödülünüzü 'Görevler' sekmesinden alın.", 'info');
-            }
-            
-            if (!document.getElementById('missionsView').classList.contains('hidden')) {
-                 renderMissions(); 
-            }
-        }
-        
-        function renderMissions() {
-            if (!missionListContainer) return;
-            missionListContainer.innerHTML = '';
-            
-            const missionHtmls = [];
-            const permanentMissionCount = 4; // m1, m2, m3, m4 kalıcı görevler
+        // --- BOBUX AL Butonuna Basınca ---
+        function claimDaily() {
+            const input = document.getElementById('bobuxInput');
+            const errorMsg = document.getElementById('error-msg');
+            let amount = parseInt(input.value);
 
-            MISSIONS.forEach((mission, index) => {
-                if (!missionStates[mission.id]) {
-                    missionStates[mission.id] = {};
-                }
-                const state = missionStates[mission.id] || {};
-                const isCompleted = state.completed || false;
-                const isClaimed = state.claimed || false;
-                const currentValue = getMissionProgressValue(mission);
-                
-                const progress = Math.min(100, (currentValue / mission.requiredAmount) * 100);
-                
-                let buttonText = 'İlerleme Kaydediliyor...';
-                let buttonColor = 'bg-gray-500 cursor-not-allowed';
-                let buttonAction = `disabled`;
-                
-                if (isClaimed) {
-                    buttonText = 'ALINDI';
-                    buttonColor = 'bg-green-800 cursor-not-allowed';
-                } else if (isCompleted) {
-                    buttonText = 'ÖDÜLÜ AL!';
-                    buttonColor = 'bg-green-600 hover:bg-green-700';
-                    // KRİTİK: Global fonksiyonu inline çağırıyoruz.
-                    buttonAction = `onclick="window.claimMissionReward('${mission.id}')"`; 
-                }
-                
-                const rewardSymbol = mission.reward.type === 'coin' ? '💰' : '⚛️';
-                const rewardAmount = formatNumber(mission.reward.amount);
-                
-                const missionHtml = `
-                    <div class="p-4 rounded-lg bg-gray-700 shadow-lg border ${isClaimed ? 'border-gray-500' : isCompleted ? 'border-yellow-500' : 'border-green-500'}">
-                        <h3 class="text-xl font-bold ${isCompleted && !isClaimed ? 'text-yellow-300' : 'text-green-300'}">${mission.name} ${index >= permanentMissionCount ? '(Döngüsel)' : ''}</h3>
-                        <p class="text-sm text-gray-300 mt-1">${mission.description}</p>
-                        
-                        <div class="mt-3 flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-semibold text-yellow-400">Ödül: ${rewardAmount} ${rewardSymbol}</span>
-                                <span class="text-xs text-gray-400">İlerleme: ${formatNumber(currentValue)} / ${formatNumber(mission.requiredAmount)}</span>
-                            </div>
-
-                            <button class="mission-claim-btn px-4 py-2 mt-2 sm:mt-0 rounded-lg font-bold transition duration-200 ${buttonColor}" 
-                                    ${buttonAction}>
-                                ${buttonText}
-                            </button>
-                        </div>
-                        
-                        <div class="w-full bg-gray-600 rounded-full h-2.5 mt-2">
-                            <div class="bg-green-500 h-2.5 rounded-full" style="width: ${progress}%;"></div>
-                        </div>
-                    </div>
-                `;
-                missionHtmls.push(missionHtml);
-            });
-            
-            missionListContainer.innerHTML = missionHtmls.join('');
-        }
-        
-        function replaceMission(completedMissionId) {
-            const permanentMissionCount = 4;
-            const completedIndex = MISSIONS.findIndex(m => m.id === completedMissionId);
-            
-            // Sadece döngüsel görevleri değiştir (index 4 ve sonrası)
-            if (completedIndex !== -1 && completedIndex >= permanentMissionCount) {
-                const nextRotatingMissionData = ROTATING_MISSIONS[rotatingMissionIndex % ROTATING_MISSIONS.length];
-                
-                // Yeni görev oluştur ve benzersiz ID ata
-                const newMission = { 
-                    ...nextRotatingMissionData, 
-                    id: `r${Date.now()}` 
-                };
-                
-                MISSIONS[completedIndex] = newMission; 
-                
-                rotatingMissionIndex++;
-                delete missionStates[completedMissionId]; // Eski görevin durumunu sil
-                
-                // Yeni görevi kontrol et
-                checkMissionProgress();
-            }
-        }
-        
-        // KRİTİK DÜZELTME: Bu fonksiyon, window objesine atanarak global scope'a taşındı.
-        window.claimMissionReward = function(missionId) {
-            
-            const mission = MISSIONS.find(m => m.id === missionId);
-            const state = missionStates[missionId];
-
-            if (!mission || !state || !state.completed || state.claimed) {
-                showMessage("Hata: Bu görevin ödülü alınamıyor.", 'error');
+            // Doğrulama İşlemleri
+            if (isNaN(amount) || amount <= 0) {
+                errorMsg.innerText = "Lütfen geçerli bir sayı gir!";
+                errorMsg.style.display = 'block';
                 return;
             }
 
-            if (mission.reward.type === 'coin') {
-                coins += mission.reward.amount;
-                showMessage(`${formatNumber(mission.reward.amount)} Para kazandınız!`, 'success');
-            } else if (mission.reward.type === 'rbp') {
-                rebirthPoints += mission.reward.amount;
-                showMessage(`${mission.reward.amount} RBP kazandınız!`, 'success');
-                renderMarket(REBIRTH_ITEMS, rebirthStoreItemsContainer, buyRebirthItem, rebirthPoints, '⚛️'); 
+            if (amount > 250) {
+                // Eğer 250'den fazla yazarsa otomatik 250 verelim (veya hata verebiliriz, burada 250'ye sabitliyoruz)
+                amount = 250;
+                alert("Maksimum limit 250 olduğu için 250 Robux eklendi.");
             }
 
-            missionStates[missionId].claimed = true;
-            
-            // Eğer ilk 4 kalıcı görevin dışında bir görev ise, yerine yeni döngüsel görev koy.
-            const permanentMissionCount = 4;
-            const missionIndex = MISSIONS.findIndex(m => m.id === missionId);
-            
-            if (missionIndex !== -1 && missionIndex >= permanentMissionCount) {
-                 replaceMission(missionId);
-            }
-            
+            // Robux'u ekle
+            score += amount;
             updateDisplay();
-            renderMissions(); 
-            saveGame();
-        }
-        
-        // ------------------------------------------------------------------
-        // LİDERLİK TABLOSU MANTIK
-        // ------------------------------------------------------------------
-        
-        function updateLeaderboard(netPassiveRate) {
-            const playerName = `Oyuncu ${rebirths}`; // Rebirth sayısını isim olarak kullan
-            
-            // Eğer skor mevcut listedeki en yüksek skorlardan biriyse ekle.
-            leaderboard.push({ name: playerName, score: Math.floor(netPassiveRate) });
-            
-            // Skorları büyükten küçüğe sırala
-            leaderboard.sort((a, b) => b.score - a.score);
-            
-            // İlk 5'i tut
-            leaderboard = leaderboard.slice(0, 5);
-        
-            saveGame(); // Liderlik tablosunu kaydet
+            saveData();
+
+            // Zamanı kaydet (Şu anki zamanı kaydeder)
+            localStorage.setItem('lastClaimTime', Date.now());
+
+            // Modalı kapat
+            document.getElementById('dailyModal').style.display = 'none';
         }
 
-        function renderLeaderboard() {
-            if (!leaderboardListContainer) return;
-            leaderboardListContainer.innerHTML = '';
-
-            if (leaderboard.length === 0) {
-                 leaderboardListContainer.innerHTML = '<p class="text-center text-gray-400 p-8">Henüz skor yok. Bir Rebirth yapın!</p>';
-                 return;
-            }
-            
-            leaderboard.forEach((entry, index) => {
-                const rank = index + 1;
-                let rankColor = 'text-gray-400';
-                if (rank === 1) rankColor = 'text-yellow-400 text-3xl';
-                else if (rank === 2) rankColor = 'text-gray-300 text-2xl';
-                else if (rank === 3) rankColor = 'text-yellow-600 text-xl';
-
-                const entryHtml = `
-                    <div class="p-4 rounded-lg flex items-center justify-between ${rank === 1 ? 'bg-yellow-900 border-yellow-500' : 'bg-gray-700 border-gray-600'} border-2">
-                        <span class="font-extrabold ${rankColor} w-1/5">#${rank}</span>
-                        <span class="text-lg font-semibold w-2/5">${entry.name}</span>
-                        <span class="text-xl font-bold text-red-400 w-2/5 text-right">${formatNumber(entry.score)} SBK</span>
-                    </div>
-                `;
-                leaderboardListContainer.innerHTML += entryHtml;
-            });
-        }
-        
-        // ------------------------------------------------------------------
-        // SIFIRLAMA ve KAYIT MANTIK
-        // ------------------------------------------------------------------
-        
-        function showResetConfirmation() {
-            resetConfirmModal.classList.remove('hidden');
-        }
-
-        function executeResetGame() {
-            localStorage.removeItem('clickerGameSave');
-            localStorage.removeItem('leaderboardSave'); // Liderlik tablosunu da sil
-            window.location.reload(); 
-        }
-
-        function saveGame() {
-            const gameState = {
-                coins, baseClickValue, basePassiveRate, rebirths, rebirthPoints, 
-                rebirthMultiplier, passiveMultiplier, rbpStartingCoinBonus, rbpStartingPassiveBonus, 
-                rbpPermanentClickMultiplierBonus, rbpAutoclickerLevel, totalClicks, 
-                totalMarketUpgradesBought, missionStates, rotatingMissionIndex,
-                lastSaveTime: Date.now(), 
-                marketItems: MARKET_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
-                rebirthItems: REBIRTH_ITEMS.map(item => ({ id: item.id, level: item.level, cost: item.cost })),
-                MISSIONS: MISSIONS.map(m => ({ id: m.id, name: m.name, requirementType: m.requirementType, requiredAmount: m.requiredAmount, reward: m.reward, description: m.description })),
-            };
-            
-            localStorage.setItem('clickerGameSave', JSON.stringify(gameState));
-            localStorage.setItem('leaderboardSave', JSON.stringify(leaderboard)); 
-        }
-
-        function loadGame() {
-            const savedState = localStorage.getItem('clickerGameSave');
-            const savedLeaderboard = localStorage.getItem('leaderboardSave');
-
-            if (savedLeaderboard) {
-                leaderboard = JSON.parse(savedLeaderboard);
-            }
-            
-            if (savedState) {
-                const gameState = JSON.parse(savedState);
-                
-                // Durum yükleme
-                coins = gameState.coins || 0;
-                baseClickValue = gameState.baseClickValue || 1;
-                basePassiveRate = gameState.basePassiveRate || 0;
-                rebirths = gameState.rebirths || 0;
-                rebirthPoints = gameState.rebirthPoints || 0;
-                rebirthMultiplier = gameState.rebirthMultiplier || 1;
-                passiveMultiplier = gameState.passiveMultiplier || 1;
-                rbpStartingCoinBonus = gameState.rbpStartingCoinBonus || 0;
-                rbpStartingPassiveBonus = gameState.rbpStartingPassiveBonus || 0;
-                rbpPermanentClickMultiplierBonus = gameState.rbpPermanentClickMultiplierBonus || 0;
-                rbpAutoclickerLevel = gameState.rbpAutoclickerLevel || 0;
-                totalClicks = gameState.totalClicks || 0;
-                totalMarketUpgradesBought = gameState.totalMarketUpgradesBought || 0;
-                missionStates = gameState.missionStates || {};
-                rotatingMissionIndex = gameState.rotatingMissionIndex || 0;
-
-                // Görev yapısını yükle
-                if (gameState.MISSIONS && gameState.MISSIONS.length > 0) {
-                     MISSIONS = gameState.MISSIONS;
-                } else {
-                     // Eğer eski kayıtta missions yoksa, başlangıç döngüsel görevleri ekle
-                     for (let i = 0; i < 2; i++) {
-                         MISSIONS.push({ id: `r${Date.now() + i}`, name: "Başlangıç Rotasyonu", requirementType: 'passiveRate', requiredAmount: 1, reward: { type: 'coin', amount: 100 }, description: "Bu, ilk döngüsel görevdir. Yerine yenisi gelecek." });
-                    }
-                }
-                
-                // Market öğelerini yükle
-                gameState.marketItems?.forEach(savedItem => {
-                    const item = MARKET_ITEMS.find(i => i.id === savedItem.id);
-                    if (item) { item.level = savedItem.level; item.cost = savedItem.cost; }
-                });
-                gameState.rebirthItems?.forEach(savedItem => {
-                    const item = REBIRTH_ITEMS.find(i => i.id === savedItem.id);
-                    if (item) { item.level = savedItem.level; item.cost = savedItem.cost; }
-                });
-                
-                // Offline ilerleme hesaplaması
-                const timeSinceLastSave = Date.now() - (gameState.lastSaveTime || Date.now());
-                const secondsOffline = Math.min(Math.floor(timeSinceLastSave / 1000), MAX_OFFLINE_TIME_SECONDS);
-                
-                if (secondsOffline > 0) {
-                    const netPassive = getNetPassiveRate();
-                    const offlineGains = netPassive * secondsOffline;
-                    
-                    if (netPassive > 0 && offlineGains > 0) {
-                        coins += offlineGains;
-                        showMessage(`Çevrimdışı Gelir: ${secondsOffline} saniye için ${formatNumber(offlineGains)} Para kazanıldı.`, 'offline');
-                    }
-                }
-                
-                showMessage(`Oyun yüklendi!`, 'success');
-            } else {
-                showMessage("Yeni Oyun Başlatıldı!", 'info');
-            }
-        }
-        
-        // ------------------------------------------------------------------
-        // OYUN BAŞLATMA
-        // ------------------------------------------------------------------
-
-        function startPassiveIncomeLoop() {
-            setInterval(handlePassiveIncome, 1000); 
-        }
-        function startAutoclickerLoop() {
-             if (rbpAutoclickerLevel > 0) {
-                 if (window.autoclickerInterval) clearInterval(window.autoclickerInterval); 
-                 
-                 window.autoclickerInterval = setInterval(() => {
-                     for (let i = 0; i < rbpAutoclickerLevel; i++) {
-                         handleManualClick(null); 
-                     }
-                 }, 1000); 
-             }
-        }
-
-        function initializeGame() {
-            loadGame();
-
-            if (clickButton) clickButton.addEventListener('click', handleManualClick);
-            if (rebirthButton) rebirthButton.addEventListener('click', performRebirth);
-            
-            if (resetGameButton) resetGameButton.addEventListener('click', showResetConfirmation);
-
-            if (confirmResetButton) confirmResetButton.addEventListener('click', executeResetGame);
-            if (cancelResetButton) cancelResetButton.addEventListener('click', () => resetConfirmModal.classList.add('hidden'));
-            
-            document.getElementById('navClicker').addEventListener('click', () => switchView('clickerView'));
-            document.getElementById('navMarket').addEventListener('click', () => switchView('marketView'));
-            document.getElementById('navMissions').addEventListener('click', () => switchView('missionsView')); 
-            document.getElementById('navRebirthStore').addEventListener('click', () => switchView('rebirthStoreView'));
-            document.getElementById('navCompetition').addEventListener('click', () => switchView('competitionView'));
-            document.getElementById('navSettings').addEventListener('click', () => switchView('settingsView'));
-
-            startPassiveIncomeLoop();
-            startAutoclickerLoop();
-            checkMissionProgress(); 
-            
-            setInterval(saveGame, 5000);
-
-            updateDisplay();
-            switchView('clickerView'); 
-        }
-
-        document.addEventListener('DOMContentLoaded', initializeGame);
-        
     </script>
 </body>
 </html>
