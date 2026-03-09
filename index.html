@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Efsanevi Clicker</title>
     <style>
+        /* --- RENK TEMALARI --- */
         :root {
             --bg-color: #121212;
             --panel-bg: #1e1e1e;
@@ -12,8 +13,24 @@
             --accent-color: #bb86fc;
             --btn-bg: #332940;
             --btn-hover: #4a3b5c;
+            --btn-text: #ffffff;
             --rebirth-color: #cf6679;
             --gold-color: #f2c94c;
+            --border-color: #333;
+        }
+
+        /* Aydınlık Mod Değişkenleri */
+        body.light-mode {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-color: #2c3e50;
+            --accent-color: #6200ea;
+            --btn-bg: #e0e0e0;
+            --btn-hover: #cccccc;
+            --btn-text: #2c3e50;
+            --rebirth-color: #d32f2f;
+            --gold-color: #f39c12;
+            --border-color: #ddd;
         }
 
         body {
@@ -23,10 +40,29 @@
             margin: 0;
             padding: 20px;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         h1, h2, h3 { color: var(--accent-color); margin-top: 0; }
         
+        .header-area { display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 20px; }
+        
+        /* Ayarlar Butonu */
+        .settings-btn {
+            position: absolute;
+            right: 20px;
+            width: auto;
+            padding: 10px 15px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-color);
+            transition: 0.2s;
+        }
+        .settings-btn:hover { background-color: var(--btn-hover); color: #fff; }
+
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -42,8 +78,9 @@
             padding: 20px;
             flex: 1;
             min-width: 300px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            border: 1px solid #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         /* Ana Tıklama Alanı */
@@ -58,8 +95,8 @@
         }
         #click-btn:active { transform: scale(0.9); }
         
-        .score-display { font-size: 32px; font-weight: bold; margin: 20px 0; color: #fff; }
-        .stats-text { font-size: 16px; margin: 5px 0; color: #aaa; }
+        .score-display { font-size: 32px; font-weight: bold; margin: 20px 0; }
+        .stats-text { font-size: 16px; margin: 5px 0; opacity: 0.8; }
 
         /* Butonlar */
         button {
@@ -67,35 +104,59 @@
             padding: 12px;
             margin: 8px 0;
             background-color: var(--btn-bg);
-            color: white;
-            border: 1px solid #555;
+            color: var(--btn-text);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
             transition: 0.2s;
         }
-        button:hover:not(:disabled) { background-color: var(--btn-hover); }
-        button:disabled { background-color: #2a2a2a; color: #666; cursor: not-allowed; border-color: #222; }
+        button:hover:not(:disabled) { background-color: var(--btn-hover); color: #fff; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Özel Paneller */
         .rebirth-panel { border: 2px solid var(--rebirth-color); }
         .rebirth-panel h2 { color: var(--rebirth-color); }
-        .rebirth-btn { background-color: #5c2c35; border-color: var(--rebirth-color); }
-        .rebirth-btn:hover:not(:disabled) { background-color: #7a3a46; }
+        .rebirth-btn { background-color: rgba(207, 102, 121, 0.1); border-color: var(--rebirth-color); }
 
-        .pack-panel { border: 2px dashed var(--gold-color); background: #2a2411; }
-        .pack-panel h3 { color: var(--gold-color); }
+        .pack-panel { border: 2px dashed var(--gold-color); background: rgba(242, 201, 76, 0.05); padding: 15px; border-radius: 8px; }
+        .pack-panel h3 { color: var(--gold-color); margin-bottom: 5px;}
         
-        .timer { font-family: monospace; font-size: 18px; color: var(--gold-color); }
+        .timer { font-family: monospace; font-size: 18px; color: var(--gold-color); margin: 10px 0; font-weight: bold;}
         .warning { color: #ff5252; font-size: 12px; }
 
-        /* Reset Data */
-        #reset-btn { background-color: transparent; color: #666; font-size: 12px; border: none; margin-top: 30px; text-decoration: underline; }
+        /* --- ÖZEL MODALLAR (AÇILIR PENCERELER) --- */
+        .modal-overlay {
+            display: none; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; 
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal {
+            background: var(--panel-bg); padding: 30px; border-radius: 12px; 
+            text-align: center; border: 2px solid var(--accent-color); 
+            max-width: 400px; width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
+        
+        /* Modal Özel Buton Renkleri */
+        .btn-yes { background-color: #ff5252 !important; color: white !important; border: none; font-size: 18px;}
+        .btn-yes:hover { background-color: #d32f2f !important; }
+        .btn-no { background-color: #4caf50 !important; color: white !important; border: none; font-size: 18px;}
+        .btn-no:hover { background-color: #388e3c !important; }
+        .btn-danger { background-color: rgba(255, 82, 82, 0.1); color: #ff5252; border-color: #ff5252; }
+        .btn-danger:hover { background-color: #ff5252 !important; color: white !important; }
+
     </style>
 </head>
 <body>
 
-    <h1>🚀 Efsanevi Clicker</h1>
+    <div class="header-area">
+        <h1>🚀 Efsanevi Clicker</h1>
+        <button class="settings-btn" id="btn-open-settings">⚙️ Ayarlar</button>
+    </div>
     
     <div class="container">
         <div class="panel">
@@ -103,7 +164,7 @@
             <div class="score-display">Puan: <span id="score">0</span></div>
             <button id="click-btn">💎</button>
             
-            <hr style="border-color: #333; margin: 20px 0;">
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
             
             <h3>İstatistikler</h3>
             <div class="stats-text">Tıklama Gücü: <span id="stat-click">1</span></div>
@@ -119,75 +180,124 @@
             <button id="btn-upg-click">Tıklama Gücü +1 <br><small>Maliyet: <span id="cost-click">10</span> Puan</small></button>
             <button id="btn-upg-auto">Oto Tıklama +1 <br><small>Maliyet: <span id="cost-auto">50</span> Puan</small></button>
 
-            <hr style="border-color: #333; margin: 20px 0;">
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
 
             <div class="pack-panel">
                 <h3>🎁 Başlangıç Paketi</h3>
-                <p style="font-size: 14px;">+10 Tıklama Gücü & +5 Oto Tıklama</p>
+                <p style="font-size: 14px; margin: 5px 0;">+10 Tıklama Gücü & +5 Oto Tıklama</p>
                 <div id="pack-status" class="timer">00:00:00</div>
                 <button id="btn-buy-pack">Satın Al <br><small>Maliyet: 500 Puan</small></button>
             </div>
         </div>
 
         <div class="panel rebirth-panel">
-            <h2>🔥 Rebirth (Yeniden Doğuş)</h2>
+            <h2>🔥 Rebirth</h2>
             <p class="stats-text">Her şeye sıfırdan başla ama kalıcı güç kazan!</p>
-            <div style="color: var(--rebirth-color); font-weight: bold; margin-bottom: 15px;">
+            <div style="color: var(--rebirth-color); font-weight: bold; margin-bottom: 15px; font-size: 18px;">
                 Rebirth Puanı (RP): <span id="rebirth-coins">0</span>
             </div>
 
             <button id="btn-rebirth" class="rebirth-btn">
                 Rebirth Yap <br><small>Gereken Puan: <span id="cost-rebirth">10000</span></small>
             </button>
-            <p class="warning">DİKKAT: Rebirth yapmak Puan, Tıklama Gücü ve Oto Tıklamayı sıfırlar! (Başlangıç paketi alımları dahil).</p>
+            <p class="warning">DİKKAT: Rebirth yapmak Puan, Tıklama Gücü ve Oto Tıklamayı sıfırlar!</p>
 
-            <hr style="border-color: #5c2c35; margin: 20px 0;">
+            <hr style="border-color: var(--rebirth-color); margin: 20px 0; opacity: 0.3;">
 
-            <h3>Rebirth Market (RP ile alınır)</h3>
+            <h3>Rebirth Market</h3>
             <button id="btn-r-mult" class="rebirth-btn">Kalıcı Çarpan +x0.5 <br><small>Maliyet: <span id="cost-r-mult">1</span> RP</small></button>
             <button id="btn-r-base" class="rebirth-btn">Başlangıç Puanı +100 <br><small>Maliyet: <span id="cost-r-base">2</span> RP</small></button>
         </div>
     </div>
 
-    <button id="reset-btn">Tüm Kayıtları Sil ve Sıfırla</button>
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal">
+            <h2>⚙️ Ayarlar</h2>
+            <button id="btn-theme-toggle">Aydınlık Mod'a Geç ☀️</button>
+            <hr style="border-color: var(--border-color); margin: 20px 0;">
+            <button id="btn-open-reset" class="btn-danger">Tüm Verileri Sil 🗑️</button>
+            <button id="btn-close-settings" style="margin-top: 15px; background: transparent; border: 1px solid var(--border-color);">Kapat</button>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal">
+            <h2 style="color: #ff5252; margin-top: 0;">⚠️ UYARI</h2>
+            <h3 style="margin-bottom: 20px;">BÜTÜN VERİLERİN SİLİNECEK ONAYLIYORMUSUN ?</h3>
+            <p class="stats-text">Bu işlem geri alınamaz.</p>
+            <div class="modal-btns">
+                <button id="btn-reset-yes" class="btn-yes">EVET</button>
+                <button id="btn-reset-no" class="btn-no">HAYIR</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        // --- 1. OYUN VERİLERİ (VARSAYILAN) ---
+        // --- 1. TEMA VE AYARLAR SİSTEMİ ---
+        const themeToggleBtn = document.getElementById('btn-theme-toggle');
+        
+        // Temayı yükle
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-mode');
+            themeToggleBtn.innerText = "Karanlık Mod'a Geç 🌙";
+        }
+
+        // Tema değiştirme
+        themeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.innerText = "Karanlık Mod'a Geç 🌙";
+            } else {
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.innerText = "Aydınlık Mod'a Geç ☀️";
+            }
+        });
+
+        // --- 2. MODAL KONTROLLERİ ---
+        const settingsModal = document.getElementById('settings-modal');
+        const resetModal = document.getElementById('reset-modal');
+
+        // Ayarları Aç/Kapat
+        document.getElementById('btn-open-settings').addEventListener('click', () => settingsModal.style.display = 'flex');
+        document.getElementById('btn-close-settings').addEventListener('click', () => settingsModal.style.display = 'none');
+
+        // Silme Onay Ekranını Aç/Kapat
+        document.getElementById('btn-open-reset').addEventListener('click', () => {
+            settingsModal.style.display = 'none'; // Ayarları gizle
+            resetModal.style.display = 'flex';    // Onay ekranını aç
+        });
+        
+        // HAYIR Butonu
+        document.getElementById('btn-reset-no').addEventListener('click', () => {
+            resetModal.style.display = 'none';
+        });
+
+        // EVET Butonu (Tüm verileri sil)
+        document.getElementById('btn-reset-yes').addEventListener('click', () => {
+            localStorage.removeItem('efsaneviClickerSave');
+            localStorage.removeItem('theme'); // Temayı da sıfırlar
+            location.reload(); // Sayfayı yenile ve sıfırdan başlat
+        });
+
+        // --- 3. OYUN VERİLERİ ---
         let game = {
-            score: 0,
-            clickPower: 1,
-            autoClick: 0,
-            
-            costClick: 10,
-            costAuto: 50,
-            
-            rebirths: 0,
-            rebirthCoins: 0,
-            rebirthReq: 10000,
-            multiplier: 1,
-            baseStartScore: 0,
-
-            costRMult: 1,
-            costRBase: 2,
-
-            firstPlayedTime: Date.now(), // Paketin sayacı için
+            score: 0, clickPower: 1, autoClick: 0,
+            costClick: 10, costAuto: 50,
+            rebirths: 0, rebirthCoins: 0, rebirthReq: 10000,
+            multiplier: 1, baseStartScore: 0,
+            costRMult: 1, costRBase: 2,
+            firstPlayedTime: Date.now(),
             packBoughtInCurrentCycle: false
         };
 
-        // --- 2. KAYIT SİSTEMİ (LOCALSTORAGE) ---
-        function saveGame() {
-            localStorage.setItem('efsaneviClickerSave', JSON.stringify(game));
-        }
-
+        function saveGame() { localStorage.setItem('efsaneviClickerSave', JSON.stringify(game)); }
         function loadGame() {
             let savedGame = JSON.parse(localStorage.getItem('efsaneviClickerSave'));
-            if (savedGame !== null) {
-                // Eski kayıtta yeni eklenen değişkenler yoksa diye Object.assign kullanıyoruz
-                game = Object.assign(game, savedGame);
-            }
+            if (savedGame !== null) { game = Object.assign(game, savedGame); }
         }
 
-        // --- 3. DOM ELEMENTLERİ ---
+        // --- 4. DOM ELEMENTLERİ ---
         const elScore = document.getElementById('score');
         const elStatClick = document.getElementById('stat-click');
         const elStatAuto = document.getElementById('stat-auto');
@@ -203,7 +313,7 @@
         const btnRMult = document.getElementById('btn-r-mult');
         const btnRBase = document.getElementById('btn-r-base');
 
-        // --- 4. GÜNCELLEME FONKSİYONLARI ---
+        // --- 5. GÜNCELLEME FONKSİYONLARI ---
         function updateUI() {
             elScore.innerText = Math.floor(game.score);
             elStatClick.innerText = game.clickPower;
@@ -212,14 +322,12 @@
             elStatRebirths.innerText = game.rebirths;
             elRebirthCoins.innerText = game.rebirthCoins;
 
-            // Maliyet metinlerini güncelle
             document.getElementById('cost-click').innerText = game.costClick;
             document.getElementById('cost-auto').innerText = game.costAuto;
             document.getElementById('cost-rebirth').innerText = game.rebirthReq;
             document.getElementById('cost-r-mult').innerText = game.costRMult;
             document.getElementById('cost-r-base').innerText = game.costRBase;
 
-            // Buton aktiflik durumları
             btnUpgClick.disabled = game.score < game.costClick;
             btnUpgAuto.disabled = game.score < game.costAuto;
             btnRebirth.disabled = game.score < game.rebirthReq;
@@ -227,7 +335,7 @@
             btnRBase.disabled = game.rebirthCoins < game.costRBase;
         }
 
-        // --- 5. ETKİLEŞİMLER (TIKLAMA & MARKET) ---
+        // --- 6. ETKİLEŞİMLER ---
         btnClick.addEventListener('click', () => {
             game.score += (game.clickPower * game.multiplier);
             updateUI();
@@ -238,8 +346,7 @@
                 game.score -= game.costClick;
                 game.clickPower++;
                 game.costClick = Math.floor(game.costClick * 1.5);
-                updateUI();
-                saveGame();
+                updateUI(); saveGame();
             }
         });
 
@@ -248,29 +355,26 @@
                 game.score -= game.costAuto;
                 game.autoClick++;
                 game.costAuto = Math.floor(game.costAuto * 1.6);
-                updateUI();
-                saveGame();
+                updateUI(); saveGame();
             }
         });
 
-        // --- 6. REBİRTH SİSTEMİ ---
+        // --- 7. REBİRTH SİSTEMİ ---
         btnRebirth.addEventListener('click', () => {
             if (game.score >= game.rebirthReq) {
-                if(confirm("Emin misin? Puanın, tıklama ve oto tıklama gücün sıfırlanacak ama Rebirth Puanı (RP) kazanacaksın!")) {
-                    game.rebirths++;
-                    game.rebirthCoins += Math.floor(game.score / 10000); // Her 10k puan 1 RP verir
-                    
-                    // Resetlenen Değerler
-                    game.score = game.baseStartScore;
-                    game.clickPower = 1;
-                    game.autoClick = 0;
-                    game.costClick = 10;
-                    game.costAuto = 50;
-                    game.rebirthReq = Math.floor(game.rebirthReq * 2.5); // Sonraki rebirth zorlaşır
+                // Burada da varsayılan uyarıyı kaldırıp direkt onaylayabiliriz ya da kendi modalımızı yapabiliriz. 
+                // Şimdilik Rebirth genelde direkt yapılır veya basit tutulur. İstiyorsan buna da özel modal yaparız.
+                game.rebirths++;
+                game.rebirthCoins += Math.floor(game.score / 10000); 
+                
+                game.score = game.baseStartScore;
+                game.clickPower = 1;
+                game.autoClick = 0;
+                game.costClick = 10;
+                game.costAuto = 50;
+                game.rebirthReq = Math.floor(game.rebirthReq * 2.5); 
 
-                    updateUI();
-                    saveGame();
-                }
+                updateUI(); saveGame();
             }
         });
 
@@ -279,8 +383,7 @@
                 game.rebirthCoins -= game.costRMult;
                 game.multiplier += 0.5;
                 game.costRMult += 2;
-                updateUI();
-                saveGame();
+                updateUI(); saveGame();
             }
         });
 
@@ -289,13 +392,11 @@
                 game.rebirthCoins -= game.costRBase;
                 game.baseStartScore += 100;
                 game.costRBase += 3;
-                updateUI();
-                saveGame();
+                updateUI(); saveGame();
             }
         });
 
-        // --- 7. BAŞLANGIÇ PAKETİ ZAMANLAYICISI ---
-        // 48 saat aktif, 1 saat bekleme süresi = Toplam 49 saatlik döngü
+        // --- 8. BAŞLANGIÇ PAKETİ ZAMANLAYICISI ---
         const activeTime = 48 * 60 * 60 * 1000; 
         const cycleTime = 49 * 60 * 60 * 1000;
 
@@ -304,7 +405,6 @@
             let currentCycleTime = timePassed % cycleTime;
             let currentCycleNumber = Math.floor(timePassed / cycleTime);
             
-            // Eğer yeni bir döngüye girdiysek, satın alma hakkını sıfırla
             if (game.lastCycleNumber !== currentCycleNumber) {
                 game.packBoughtInCurrentCycle = false;
                 game.lastCycleNumber = currentCycleNumber;
@@ -313,23 +413,18 @@
             let statusEl = document.getElementById('pack-status');
 
             if (currentCycleTime < activeTime) {
-                // PAKET AKTİF
                 let timeLeft = activeTime - currentCycleTime;
                 statusEl.innerText = `Kalan Süre: ${formatTime(timeLeft)}`;
                 statusEl.style.color = "var(--gold-color)";
                 
                 if (game.packBoughtInCurrentCycle) {
                     btnBuyPack.disabled = true;
-                    btnBuyPack.innerText = "Bu Döngüde Alındı";
-                } else if (game.score >= 500) {
-                    btnBuyPack.disabled = false;
-                    btnBuyPack.innerHTML = `Satın Al <br><small>Maliyet: 500 Puan</small>`;
+                    btnBuyPack.innerText = "Alındı";
                 } else {
-                    btnBuyPack.disabled = true;
+                    btnBuyPack.disabled = game.score < 500;
                     btnBuyPack.innerHTML = `Satın Al <br><small>Maliyet: 500 Puan</small>`;
                 }
             } else {
-                // PAKET BEKLEMEDE (1 Saatlik kayıp periyodu)
                 let cooldownLeft = cycleTime - currentCycleTime;
                 statusEl.innerText = `Geri Dönüş: ${formatTime(cooldownLeft)}`;
                 statusEl.style.color = "#ff5252";
@@ -344,9 +439,7 @@
                 game.clickPower += 10;
                 game.autoClick += 5;
                 game.packBoughtInCurrentCycle = true;
-                updateUI();
-                saveGame();
-                checkStarterPack();
+                updateUI(); saveGame(); checkStarterPack();
             }
         });
 
@@ -358,25 +451,16 @@
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // --- 8. OYUN DÖNGÜSÜ (AUTO CLICK & KAYIT) ---
+        // --- 9. OYUN DÖNGÜSÜ ---
         setInterval(() => {
             if (game.autoClick > 0) {
                 game.score += (game.autoClick * game.multiplier);
                 updateUI();
             }
             checkStarterPack();
-        }, 1000); // Her saniyede bir çalışır
+        }, 1000);
 
-        // Her 5 saniyede bir otomatik kayıt
         setInterval(saveGame, 5000);
-
-        // --- RESET BUTONU (GELİŞTİRİCİ İÇİN) ---
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if(confirm("Tüm kayıtların silinecek ve en başa döneceksin. Emin misin?")) {
-                localStorage.removeItem('efsaneviClickerSave');
-                location.reload();
-            }
-        });
 
         // --- BAŞLAT ---
         loadGame();
