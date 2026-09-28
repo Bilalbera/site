@@ -1,7 +1,7 @@
-# Bilal Efendi Studios Resmi Uygulamasına hoşgeldin!
+# Bilal Efendi Resmi Uygulamasına hoşgeldin!
 
 - # Ne işe yarar?
-  Burada kanalımdaki videoları ücretsiz şekilde izleyebilirsiniz.
+Burada kanalımdaki videoları ücretsiz şekilde izleyebilirsiniz.
 
 - # Özellikler:
 Kişisel Profil: Kendinize ait bir profiliniz olur. (sadece gmail ile giriş yapılır.)
